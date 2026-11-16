@@ -1,0 +1,5 @@
+{% extends "base.html" %}{% block c %}<h1>Jobs</h1>
+<form method="post" action="/jobs/match"><button>Match jobs to my profile</button></form>
+{% for j in jobs %}{% set m = scores.get(j.id) %}<div class="box"><h3>{{j.title}}</h3><p class="note">{{j.company}}{% if not j.verified %} (unverified placeholder){% endif %}</p>{% if m %}<p><b>{{m.score}}% fit.</b> {{m.why}}</p>{% endif %}</div>{% endfor %}
+<form method="post" action="/jobs/paste" class="box"><label>Paste any job description<textarea name="jd" rows="5" maxlength="6000" required></textarea></label><button>Check my fit</button></form>
+{% if paste %}<div class="box"><h3>{{paste.score}}% fit</h3><p>{{paste.why}}</p><ul>{% for t in paste.talking_points %}<li>{{t}}</li>{% endfor %}</ul></div>{% endif %}{% endblock %}
