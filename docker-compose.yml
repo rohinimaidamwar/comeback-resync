@@ -6,7 +6,9 @@ services:
     restart: unless-stopped
   caddy:
     image: caddy:2
-    env_file: .env
+    # Caddy only needs the domain. It does not receive API keys or SMTP passwords.
+    environment:
+      DOMAIN: ${DOMAIN}
     ports: ["80:80", "443:443"]
     volumes: ["./Caddyfile:/etc/caddy/Caddyfile", "caddy_data:/data"]
     depends_on: [app]

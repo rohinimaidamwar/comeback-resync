@@ -1,3 +1,3 @@
 {% extends "base.html" %}{% block c %}<h1>Break journal</h1><p>One small win a day is plenty. It becomes a resume line later.</p>
 <form method="post" class="box"><label>What did you do or learn?<textarea name="raw" rows="3" maxlength="500" required></textarea></label><button>Add entry</button></form>
-{% for e in entries %}<div class="box"><b>{{e.line}}</b><p class="note">You wrote: {{e.raw}}</p></div>{% else %}<p class="note">No entries yet. Add your first one above.</p>{% endfor %}{% endblock %}
+{% for e in entries %}<div class="box"><b>{{e.line}}</b>{% if e.tags %}<p class="note">Skills: {{e.tags|join(", ")}}</p>{% endif %}<p class="note">You wrote: {{e.raw}}</p></div>{% else %}<p class="note">No entries yet. Add your first one above.</p>{% endfor %}{% endblock %}

@@ -6,6 +6,8 @@
 <label>Email<input type="email" name="email" required autocomplete="username"></label>
 <label>Password<input type="password" name="password" required minlength="8" maxlength="200" autocomplete="new-password"></label>
 <label>Confirm password<input type="password" name="confirm" required minlength="8" maxlength="200" autocomplete="new-password"></label>
+<label>Where are you now?<select name="stage">{% for k,v in STAGES.items() %}<option value="{{k}}" {{'selected' if k=='planning'}}>{{v}}</option>{% endfor %}</select></label>
+<label>What do you want next?<select name="goal">{% for g in GOALS %}<option {{'selected' if loop.first}}>{{g}}</option>{% endfor %}</select></label>
 <button>Register</button>
 </form>
 <p class="note">Already registered? <a href="/login">Log in</a></p>

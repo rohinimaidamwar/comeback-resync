@@ -1,3 +1,3 @@
-{% extends "base.html" %}{% block c %}<h1>Contact us</h1>{% if sent %}<p class="ok">Thanks. Your message was sent.</p>{% endif %}
+{% extends "base.html" %}{% block c %}<h1>Contact us</h1>{% if sent %}<p class="ok" role="status">Thanks. Your message was sent.</p>{% endif %}{% if err %}<p class="err" role="alert">{{err}}</p>{% endif %}
 <form method="post" class="box"><label>Name<input name="name" required></label><label>Email<input type="email" name="email" required></label>
 <input name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true"><label>Message<textarea name="message" rows="4" required></textarea></label><button>Send message</button></form>{% endblock %}

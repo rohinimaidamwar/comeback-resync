@@ -2,6 +2,6 @@
 {% if err %}<p class="err">{{ 'That address is taken. Pick another.' if err=='taken' else 'Use 3-30 lowercase letters, numbers or hyphens, and tick the box.' }}</p>{% endif %}
 {% for p in pub %}<div class="box">Live at <a href="/p/{{p.slug}}">/p/{{p.slug}}</a><form method="post" action="/site/unpublish"><button class="ghost">Unpublish</button></form></div>{% endfor %}
 {% if not prof %}<p>Save a <a href="/profile">profile</a> first.</p>{% else %}<form method="post" action="/site/preview"><button>Draft my site</button></form>{% endif %}
-{% if draft %}<form method="post" action="/site/publish" class="box"><h3>{{draft.headline}}</h3><p>{{draft.about}}</p><ul>{% for s in draft.services %}<li>{{s}}</li>{% endfor %}</ul>
+{% if draft %}<form method="post" action="/site/publish" class="box">{% if notice %}<p class="note">{{notice}}</p>{% endif %}<h3>{{draft.headline}}</h3><p>{{draft.about}}</p><ul>{% for s in draft.services %}<li>{{s}}</li>{% endfor %}</ul>
 <input type="hidden" name="content" value="{{draft_json}}"><label>Page address<input name="slug" pattern="[a-z0-9-]{3,30}" required placeholder="your-name"></label>
 <label class="chk"><input type="checkbox" name="confirm" value="yes" required> I have reviewed this and want it public.</label><button>Publish</button></form>{% endif %}{% endblock %}
