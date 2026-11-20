@@ -32,6 +32,12 @@ create table if not exists pg(slug text primary key, sid text, content text, liv
         c.execute("alter table u add column pw text")
     if "name" not in cols:
         c.execute("alter table u add column name text")
+    if "plan" not in cols:
+        c.execute("alter table u add column plan text")  # JSON study plan
+    if "practice" not in cols:
+        c.execute(
+            "alter table u add column practice text"
+        )  # JSON practice-partner record
     jcols = {r[1] for r in c.execute("pragma table_info(j)")}
     if "tags" not in jcols:
         c.execute("alter table j add column tags text")  # JSON list of skill tags

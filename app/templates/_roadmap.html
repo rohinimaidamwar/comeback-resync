@@ -1,0 +1,73 @@
+{# The roadmap. Wide screens get the winding road as one SVG, so the badges stay glued to the
+   curve at every width. Narrow screens get the same seven steps as a list. #}
+<nav class="road-wrap" aria-label="Roadmap back to work">
+<svg class="road" viewBox="0 0 1090 500" role="group" aria-label="Seven steps from your starting point to being back at work">
+<path class="road-base" d="M45 382 C170 382 220 330 320 318 C440 305 490 352 590 338 C720 320 760 250 850 226 C930 205 975 180 1005 162"/>
+<path class="road-dash" d="M45 382 C170 382 220 330 320 318 C440 305 490 352 590 338 C720 320 760 250 850 226 C930 205 975 180 1005 162"/>
+<g class="road-scene" aria-hidden="true">
+<path class="limb" d="M51 356 L50 378"/><path class="limb" d="M59 356 L60 378"/>
+<path class="limb" d="M46 379 L54 379"/><path class="limb" d="M56 379 L64 379"/>
+<path class="dress" d="M47 329 Q55 325 63 329 L64 345 L68 360 Q55 364 42 360 L46 345 Z"/>
+<path class="limb" d="M63 331 Q71 322 75 311"/><circle class="hand" cx="76" cy="308" r="4"/>
+<path class="limb" d="M46 332 Q42 341 42 349"/>
+<path class="skin" d="M52 317 h6 v10 h-6 z"/>
+<circle class="skin" cx="55" cy="311" r="8.5"/>
+<path class="hair" d="M46 313 Q44 300 55 299 Q66 300 64 313 Q64 305 55 305 Q47 305 46 313 Z"/>
+</g>
+<text class="road-mark" x="20" y="450">STARTING POINT</text>
+<g class="road-scene" aria-hidden="true">
+<rect class="bldg" x="930" y="235" width="118" height="90" rx="6"/>
+<rect class="win" x="946" y="252" width="22" height="20" rx="3"/>
+<rect class="win" x="978" y="252" width="22" height="20" rx="3"/>
+<rect class="win" x="1010" y="252" width="22" height="20" rx="3"/>
+<rect class="door" x="979" y="296" width="20" height="29" rx="3"/>
+<path class="limb" d="M966 322 L966 337"/><path class="limb" d="M972 322 L972 337"/>
+<path class="limb" d="M963 338 L969 338"/><path class="limb" d="M969 338 L975 338"/>
+<path class="dress" d="M964 314 Q969 311 974 314 L975 323 L977 331 Q969 334 961 331 L963 323 Z"/>
+<path class="limb" d="M974 316 Q980 313 985 311"/>
+<path class="limb" d="M964 316 Q960 322 960 328"/>
+<path class="skin" d="M966 305 h6 v8 h-6 z"/>
+<circle class="skin" cx="969" cy="302" r="6.5"/>
+<path class="hair" d="M963 303 Q962 294 969 294 Q976 294 975 303 Q975 298 969 298 Q964 298 963 303 Z"/>
+
+<path class="limb" d="M998 322 L998 337"/><path class="limb" d="M1004 322 L1004 337"/>
+<path class="limb" d="M995 338 L1001 338"/><path class="limb" d="M1001 338 L1007 338"/>
+<path class="dress" d="M996 314 Q1001 311 1006 314 L1007 323 L1009 331 Q1001 334 993 331 L995 323 Z"/>
+<path class="limb" d="M996 316 Q991 313 986 311"/>
+<path class="limb" d="M1006 316 Q1010 322 1010 328"/>
+<path class="skin" d="M998 305 h6 v8 h-6 z"/>
+<circle class="skin" cx="1001" cy="302" r="6.5"/>
+<path class="hair" d="M995 303 Q994 294 1001 294 Q1008 294 1007 303 Q1007 298 1001 298 Q996 298 995 303 Z"/>
+<circle class="hand" cx="985" cy="310" r="3.5"/>
+<path class="confetti" d="M872 196 l7 12 -13 0 Z"/>
+<path class="confetti teal" d="M902 176 l7 12 -13 0 Z"/>
+<path class="confetti" d="M1064 214 l7 12 -13 0 Z"/>
+<circle class="seed" cx="890" cy="222" r="3"/><circle class="seed teal" cx="944" cy="196" r="3"/>
+<circle class="seed" cx="1022" cy="206" r="3"/><circle class="seed teal" cx="1078" cy="188" r="3"/>
+</g>
+<text class="road-mark" x="1048" y="404" text-anchor="end">GOAL: BACK TO THE WORKPLACE!</text>
+{% for s in steps %}
+<a class="road-link" href="{{s.href}}">
+<title>{{s.label}}</title>
+<line class="conn" x1="{{s.x}}" y1="{{s.ly1}}" x2="{{s.x}}" y2="{{s.ly2}}"/>
+<circle class="dot" cx="{{s.x}}" cy="{{s.y}}" r="4"/>
+<circle class="badge" cx="{{s.x}}" cy="{{s.by}}" r="27"/>
+<text class="num" x="{{s.x}}" y="{{s.by}}" dy=".35em">{{s.n}}</text>
+<rect class="pill" x="{{s.px}}" y="{{s.py - 16}}" width="{{s.w}}" height="32" rx="16"/>
+<image class="ico" href="/static/icons/{{s.icon}}.svg" x="{{s.ix}}" y="{{s.py - 9}}" width="18" height="18"/>
+<text class="lbl" x="{{s.lx}}" y="{{s.py}}" dy=".35em" textLength="{{s.w - 46}}" lengthAdjust="spacing">{{s.label}}</text>
+</a>
+{% endfor %}
+</svg>
+</nav>
+<ul class="road-list">
+<li class="road-end">Starting point: where you are today.</li>
+{% for s in steps %}
+<li><a class="road-item" href="{{s.href}}">
+<img src="/static/icons/{{s.icon}}.svg" alt="">
+<span class="rn">{{s.n}}</span>
+<span class="rt"><span class="rl">{{s.label}}</span><span class="rs">{{s.intro}}</span></span>
+</a></li>
+{% endfor %}
+<li class="road-end">Goal: back to the workplace!</li>
+</ul>

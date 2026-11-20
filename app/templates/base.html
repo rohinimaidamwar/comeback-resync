@@ -3,8 +3,6 @@
 <footer>General information, not legal, tax or medical advice. Nothing is shared with employers.
 {% if u %}
 <span class="note"> Signed in as {{u.email}}.</span>
-<form method="post" action="/logout" class="inl"><button class="link">Log out</button></form>
-<form method="post" action="/delete" class="inl"><button class="link">Delete my data</button></form>
 {% endif %}
  <a href="/contact">Contact us</a> · <a href="/privacy">Privacy</a>
 <div class="credit">Photo: Karola G on Pexels (free licence).</div></footer>
@@ -15,7 +13,7 @@
 <nav class="side-nav" aria-label="Main">{% for href,label,icon in NAV %}<a href="{{href}}" aria-label="{{label}}"{% if request.url.path == href %} class="on" aria-current="page"{% endif %}><img src="/static/icons/{{icon}}.svg" alt="">{{label}}</a>{% endfor %}</nav>
 </aside>
 <div class="content">
-<header class="top"><span class="hello">Welcome{% if u.name %}, {{u.name}}{% endif %}</span></header>
+<header class="top"><details class="user"><summary><span class="hello">Welcome{% if u.name %}, {{u.name}}{% endif %}</span></summary><div class="menu"><form method="post" action="/logout"><button class="link">Log out</button></form><form method="post" action="/delete"><button class="link">Delete my data</button></form></div></details></header>
 {% else %}
 <header><a href="/" class="logo">hercomeback</a><nav>
 <a href="/money">Money</a><a href="/contact">Contact</a><a href="/login">Log in</a><a href="/register">Register</a>

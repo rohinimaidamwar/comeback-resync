@@ -77,7 +77,7 @@ def test_stylesheet_link_has_a_content_version(client):
 def test_signed_in_pages_show_sidebar_and_phone_bar(logged_in):
     html = logged_in.get("/journal").text
     assert 'class="side-nav"' in html and 'class="bottom-nav"' in html
-    for path in ["/journal", "/profile", "/jobs", "/site", "/money", "/community"]:
+    for path in ["/journal", "/profile", "/jobs", "/money", "/community"]:
         assert f'href="{path}"' in html
     assert 'aria-current="page"' in html
     assert "/static/icons/notebook.svg" in html
@@ -109,10 +109,13 @@ def test_demo_greets_priya(client):
     assert "Welcome, Priya" in client.get("/journal").text
 
 
-def test_home_cards_have_botanical_images(logged_in):
+def test_home_shows_the_roadmap_linked_to_the_tool_pages(logged_in):
     html = logged_in.get("/").text
-    assert "/static/img/botanical/" in html
-    assert "/static/img/botanical/money.svg" in html
+    # Each pitstop opens the same page as its left-nav link, and nothing extra in between.
+    for path in ["/journal", "/money", "/profile", "/community", "/jobs"]:
+        assert f'class="road-link" href="{path}"' in html
+    assert "GOAL: BACK TO THE WORKPLACE!" in html
+    assert "/roadmap/" not in html
 
 
 def test_botanical_and_icon_files_are_served(client):
@@ -129,6 +132,6 @@ def test_every_card_has_its_own_botanical_image():
     from app import main
 
     files = [c[3] for c in main.CARDS.values()]
-    assert len(set(files)) == len(files) == 6
+    assert len(set(files)) == len(files) == 8
     for name in files:
         assert (APP / "static" / "img" / "botanical" / name).exists(), name

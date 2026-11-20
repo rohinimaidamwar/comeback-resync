@@ -3,5 +3,5 @@
 <p class="note">These are sample postings for practice. The companies are fictional and none is a real opening. A new set appears each visit.</p>
 {% if notice %}<p class="note">{{notice}}</p>{% endif %}
 {% for j in jobs %}{% set m = scores.get(j.id) %}<div class="box"><p class="note">Sample posting{% if j.returner_friendly %} · <span class="pill">Returner-friendly</span>{% endif %}</p><h3>{{j.title}}</h3><p class="note">{{j.company}} · {{j.location}}</p><p>{{j.summary}}</p><p class="note">Skills: {{j.tags|join(", ")}}</p>{% if m %}<p><b>{{m.score}}% fit.</b> {{m.why}}</p>{% endif %}</div>{% endfor %}
-<form method="post" action="/jobs/paste" class="box"><label>Paste any job description<textarea name="jd" rows="5" maxlength="6000" required></textarea></label><button>Check my fit</button></form>
-{% if paste %}<div class="box"><h3>{{paste.score}}% fit</h3><p>{{paste.why}}</p><ul>{% for t in paste.talking_points %}<li>{{t}}</li>{% endfor %}</ul></div>{% endif %}{% endblock %}
+
+{% endblock %}

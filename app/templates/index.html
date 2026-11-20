@@ -1,10 +1,10 @@
 {% extends "base.html" %}{% block c %}
+{% if not u %}
 <section class="hero-photo">
 <img src="/static/img/hero-group.jpg" alt="Four women working together on a colourful poster">
 <h1>A career break is a chapter, not a gap.</h1>
 </section>
 <p class="lead">Plan it, record it, and walk back in with a profile and a site that show what you did.</p>
-{% if not u %}
 <div class="box">
 <p>Create an account to keep your journal, profile and site. You can log out without losing that data.</p>
 <p><a href="/register">Register</a> · <a href="/login">Log in</a></p>
@@ -15,11 +15,11 @@
 <a class="tile" href="/register"><div><h3>Get started</h3><p>Register and start your break journal.</p></div></a>
 </div>
 {% else %}
-<div class="home-row">
-<form method="post" action="/stage" class="box ask"><label>Where are you now?<select name="stage">{% for k,v in stages.items() %}<option value="{{k}}" {{'selected' if u.stage==k}}>{{v}}</option>{% endfor %}</select></label>
+<h1>Your roadmap back to work</h1>
+<p class="lead">Seven steps from where you are now to walking back in. Open any milestone to see what it covers and the tool that goes with it.</p>
+<form method="post" action="/stage" class="box stage-row"><label>Where are you now?<select name="stage">{% for k,v in stages.items() %}<option value="{{k}}" {{'selected' if u.stage==k}}>{{v}}</option>{% endfor %}</select></label>
 <label>What do you want next?<select name="goal">{% for g in ["A job","Freelance work","My own venture"] %}<option {{'selected' if u.goal==g}}>{{g}}</option>{% endfor %}</select></label><button>Save</button></form>
-<div class="grid cards">{% for t,url,b,img in cards %}<a class="tile" href="{{url}}">{% if img %}<img src="/static/img/botanical/{{img}}" alt="">{% endif %}<div><h3>{{t}}</h3><p>{{b}}</p></div></a>{% endfor %}</div>
-</div>
+{% include "_roadmap.html" %}
 <form method="post" action="/demo"><button class="ghost">Load demo persona</button></form>
 {% endif %}
 {% endblock %}

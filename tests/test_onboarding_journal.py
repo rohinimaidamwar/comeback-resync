@@ -41,10 +41,10 @@ def test_invalid_stage_and_goal_fall_back_to_defaults(client):
     assert _stage_of(email) == {"stage": "planning", "goal": "A job"}
 
 
-def test_home_shows_cards_for_chosen_stage(logged_in):
-    # Fresh accounts default to "planning", whose first card is Profile.
+def test_home_is_the_roadmap_plus_the_stage_form(logged_in):
     html = logged_in.get("/").text
-    assert 'href="/profile"' in html
+    assert 'action="/stage"' in html
+    assert 'class="road"' in html
 
 
 def test_journal_entry_stores_and_shows_skill_tags(logged_in, monkeypatch):

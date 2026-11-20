@@ -9,7 +9,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
-CONTENT_FILES = ["jobs.json", "finance.json", "stories.json"]
+CONTENT_FILES = ["jobs.json", "finance.json", "stories.json", "courses.json"]
 
 
 class ContentEntry(BaseModel):

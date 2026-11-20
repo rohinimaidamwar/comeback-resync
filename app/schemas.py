@@ -49,3 +49,22 @@ class JobPosting(BaseModel):
     returner_friendly: bool = False
     tags: list[str] = Field(default_factory=list)
     summary: str = ""
+
+
+class StudyWeek(BaseModel):
+    title: str
+    tasks: list[str]
+
+
+class StudyPlan(BaseModel):
+    topics: list[str]
+    weeks: list[StudyWeek]
+
+
+class CourseProvider(BaseModel):
+    provider: str
+    url: str
+    note: str = ""
+    verified: bool = False
+    source_url: str = ""
+    checked_on: str = ""

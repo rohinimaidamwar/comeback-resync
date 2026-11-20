@@ -1,0 +1,6 @@
+[
+{"provider": "NPTEL", "url": "https://nptel.ac.in/", "note": "Free courses from the IITs and IISc. A certificate needs an optional proctored exam.", "verified": true, "source_url": "https://nptel.ac.in/", "checked_on": "2026-11-20"},
+{"provider": "SWAYAM", "url": "https://swayam.gov.in/", "note": "Free courses from top universities, run by the Government of India.", "verified": true, "source_url": "https://swayam.gov.in/", "checked_on": "2026-11-20"},
+{"provider": "Coursera", "url": "https://www.coursera.org/", "note": "Courses from universities and companies. Check each course for price.", "verified": true, "source_url": "https://www.coursera.org/", "checked_on": "2026-11-20"},
+{"provider": "edX", "url": "https://www.edx.org/", "note": "Courses from leading institutions. Check each course for price.", "verified": true, "source_url": "https://www.edx.org/", "checked_on": "2026-11-20"}
+]

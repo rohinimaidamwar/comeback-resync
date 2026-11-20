@@ -11,7 +11,7 @@ label{display:block;margin:8px 0;font-weight:600}input,select,textarea{display:b
 button{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:10px 16px;font:inherit;cursor:pointer}
 button.ghost{background:none;color:var(--acc);border:1.5px solid var(--acc)}button.link{background:none;color:var(--acc);text-decoration:underline;padding:0}
 :focus-visible{outline:3px solid var(--acc);outline-offset:2px}.note{color:var(--muted);font-size:.9rem}.err{color:#a11}.ok{color:#176b3a}
-.inl{display:inline}.hp{position:absolute;left:-9999px}footer{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);margin-top:24px}
+.hp{position:absolute;left:-9999px}footer{font-size:.85rem;color:var(--muted);border-top:1px solid var(--line);margin-top:24px}
 .credit{font-size:.8rem;margin-top:6px;opacity:.9}
 .tile>div{min-width:0}
 .empty{text-align:center;padding:12px 0}
@@ -34,25 +34,25 @@ img{max-width:100%;height:auto}
 .content{flex:1;min-width:0}
 .content>header.top{max-width:none;margin:0;padding:18px clamp(16px,3vw,32px) 0;display:flex;justify-content:flex-end}
 .hello{font-size:15px;color:var(--ink)}
+.user{position:relative}
+.user>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px}
+.user>summary::-webkit-details-marker{display:none}
+.user>summary::after{content:"";width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--muted)}
+.user[open]>summary,.user>summary:hover{background:#F7EFE3}
+.user[open]>summary::after{transform:rotate(180deg)}
+.user .menu{position:absolute;right:0;top:calc(100% + 6px);z-index:20;min-width:190px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 24px rgba(58,49,40,.14);padding:6px;display:flex;flex-direction:column}
+.user .menu button.link{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:8px;text-decoration:none}
+.user .menu button.link:hover{background:#F7EFE3}
 .content>main{max-width:1200px;margin:0 auto;padding:0 clamp(16px,3vw,32px)}
 .content>footer{max-width:1200px;margin:24px auto 0;padding:12px clamp(16px,3vw,32px)}
 .bottom-nav{display:none}
 .hero-photo{height:clamp(190px,30vw,340px)}
 .hero-photo h1{font-size:clamp(1.2rem,2.6vw,1.9rem);left:clamp(16px,3vw,28px);right:clamp(16px,3vw,28px)}
-.home-row{display:flex;gap:clamp(12px,2vw,20px);align-items:flex-start}
-.ask{width:clamp(260px,28vw,320px);flex:0 0 auto}
-.home-row .cards{flex:1;min-width:0;grid-template-columns:repeat(2,minmax(0,1fr))}
 .tile{min-width:0}
 .tile h3{overflow-wrap:break-word}
 .tile>div{min-width:0}
 .tile img{width:clamp(56px,6vw,72px);height:clamp(56px,6vw,72px);flex:0 0 auto;object-fit:contain;background:var(--soft);border-radius:14px;padding:4px}
 img{max-width:100%;height:auto}
-
-/* Below 1200px: questionnaire above the cards, cards use the full width */
-@media (max-width:1199px){
- .home-row{flex-direction:column;align-items:stretch}
- .ask{width:100%}
-}
 
 /* Tablet: icon rail, labels available to screen readers */
 @media (min-width:761px) and (max-width:1023px){
@@ -73,12 +73,62 @@ img{max-width:100%;height:auto}
  .bottom-nav a{flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:#5B4A3D;text-decoration:none;padding:4px 0;min-width:0;overflow:hidden;white-space:nowrap}
  .bottom-nav a img{width:20px;height:20px}
  .bottom-nav a.on{color:var(--acc);font-weight:600}
- .home-row{display:block}
- .ask{width:auto}
- .home-row .cards{grid-template-columns:1fr}
 }
 
 /* Very wide screens: keep line lengths comfortable */
 @media (min-width:1600px){
  .content>main{max-width:1280px}
 }
+
+/* Roadmap: the whole road lives in one SVG, so the badges stay on the curve at any width.
+   Under 1000px the same steps are shown as a list instead. */
+.road-wrap{margin:6px 0 10px}
+.road{display:block;width:100%;height:auto}
+.road-base{fill:none;stroke:#F2D5B6;stroke-width:46;stroke-linecap:round;stroke-linejoin:round}
+.road-dash{fill:none;stroke:#FFFBF4;stroke-width:3.5;stroke-dasharray:16 18;stroke-linecap:round}
+.road-mark{font:700 15px system-ui,sans-serif;fill:var(--acc);letter-spacing:1px}
+.road-scene .limb{fill:none;stroke:#6B4A2F;stroke-width:2.4;stroke-linecap:round}
+.road-scene .skin,.road-scene .hand{fill:#E8C39E}
+.road-scene .hair{fill:#6B4A2F}
+.road-scene .dress{fill:var(--acc)}
+.road-scene .bldg{fill:#FBF6EE;stroke:var(--acc);stroke-width:2.5}
+.road-scene .win{fill:#F3E4C6;stroke:#C9A06A;stroke-width:1.5}
+.road-scene .door{fill:#E8D5B7}
+.road-scene .confetti,.road-scene .seed{fill:#C9A06A}
+.road-scene .confetti.teal,.road-scene .seed.teal{fill:#7FA69B}
+.road-link{cursor:pointer}
+.road-link .conn{stroke:#C9A06A;stroke-width:2}
+.road-link .dot{fill:#C9A06A}
+.road-link .badge{fill:#FFFDF9;stroke:var(--acc);stroke-width:2.5}
+.road-link .num{font:700 17px system-ui,sans-serif;fill:var(--acc);text-anchor:middle}
+.road-link .pill{fill:#FFFDF9;stroke:var(--line);stroke-width:1.5}
+.road-link .lbl{font:700 17px system-ui,sans-serif;fill:var(--ink)}
+.road-link:hover .badge{fill:#F3E4C6}
+.road-link:hover .pill{stroke:var(--acc)}
+.road-link:focus-visible .badge{stroke-width:5}
+.road-link:focus-visible .pill{stroke:var(--acc);stroke-width:2.5}
+.road-list{display:none;list-style:none;margin:0;padding:0}
+.road-list li{margin:0 0 8px}
+.road-end{color:var(--muted);font-size:.85rem;letter-spacing:.08em;text-transform:uppercase}
+.road-item{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-decoration:none;color:inherit}
+.road-item img{width:22px;height:22px;flex:0 0 22px;margin-top:2px}
+.road-item .rn{font:700 1rem Georgia,serif;color:var(--acc);flex:0 0 auto}
+.road-item .rt{min-width:0}
+.road-item .rl{display:block;font-weight:700;font-size:.88rem;letter-spacing:.04em;color:var(--acc)}
+.road-item .rs{display:block;color:var(--muted);font-size:.88rem}
+@media (max-width:1000px){
+ .road-wrap{display:none}
+ .road-list{display:block}
+}
+
+/* Stage picker on the dashboard */
+.stage-row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.stage-row label{flex:1 1 220px;margin:0}
+.box ul,.box ol{margin:8px 0 0;padding-left:22px}
+.box li{margin-bottom:6px}
+
+/* Upskilling: study plan tasks */
+.todo-row{display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0;margin:0}
+.todo-row span{flex:1;min-width:0}
+.todo-row span.done{text-decoration:line-through;color:var(--muted)}
+.todo-row button{flex:0 0 auto;padding:6px 12px}

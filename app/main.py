@@ -8,15 +8,25 @@ import smtplib
 import sqlite3
 import time
 from collections import defaultdict
+from contextvars import ContextVar
 from email.message import EmailMessage
 from typing import List
-from fastapi import FastAPI, Request, Form
+from fastapi import BackgroundTasks, FastAPI, Request, Form
 from fastapi.responses import RedirectResponse, HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app import ai, auth, db
 from app import ai_data, evidence
-from app.schemas import JobFit, JobMatches, JobPosting, JournalLine, Profile, SiteCopy
+from app import mail_content, practice, upskill
+from app.schemas import (
+    JobFit,
+    JobMatches,
+    JobPosting,
+    JournalLine,
+    Profile,
+    SiteCopy,
+    StudyPlan,
+)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 app = FastAPI()
@@ -37,9 +47,10 @@ T.env.globals.update(
         ("/journal", "Journal", "notebook"),
         ("/profile", "Profile", "user"),
         ("/jobs", "Jobs", "briefcase"),
-        ("/site", "My site", "globe"),
         ("/money", "Money", "wallet"),
         ("/community", "Community", "users"),
+        ("/upskilling", "Learn", "growth"),
+        ("/interview", "Interview", "message"),
     ],
 )
 # Version tag from the stylesheet's content, so a changed CSS file gets a new URL and browsers refetch it.
@@ -61,6 +72,18 @@ CARDS = {
         "profile.svg",
     ),
     "jobs": ("Jobs", "/jobs", "Match openings or paste any job.", "jobs.svg"),
+    "upskilling": (
+        "Upskilling",
+        "/upskilling",
+        "A study plan and where to study.",
+        "learn.svg",
+    ),
+    "interview": (
+        "Interview prep",
+        "/interview",
+        "Talking points and practice partners.",
+        "interview.svg",
+    ),
     "site": ("My site", "/site", "Publish a portfolio page.", "site.svg"),
     "money": (
         "Money basics",
@@ -75,11 +98,106 @@ CARDS = {
         "community.svg",
     ),
 }
-ORDER = {
-    "expecting": ["money", "journal", "community", "profile"],
-    "newborn": ["journal", "community", "money", "profile"],
-    "planning": ["profile", "jobs", "site", "journal", "money", "community"],
-}
+# The seven steps of the roadmap. "card" picks the tool from CARDS that the step opens and
+# borrows its artwork from; "x", "y" and "side" place its milestone on the road in the SVG.
+STEPS = [
+    {
+        "n": "01",
+        "label": "01. REFLECT & PLAN",
+        "card": "journal",
+        "icon": "notebook",
+        "intro": "Start with where you are. Set your stage and what you want next, then write down what you have already done. Small things count.",
+        "x": 120,
+        "y": 375,
+        "side": "up",
+    },
+    {
+        "n": "02",
+        "label": "02. UPSKILLING",
+        "card": "upskilling",
+        "icon": "growth",
+        "intro": "Courses, certificates and side projects are the easiest wins to forget. Record them while they are fresh.",
+        "x": 260,
+        "y": 327,
+        "side": "down",
+    },
+    {
+        "n": "03",
+        "label": "03. FINANCE & BENEFITS",
+        "card": "money",
+        "icon": "wallet",
+        "intro": "Short cards on provident fund, tax and leave, each one pointing at the official source.",
+        "x": 400,
+        "y": 313,
+        "side": "up",
+    },
+    {
+        "n": "04",
+        "label": "04. RESUME REBUILD",
+        "card": "profile",
+        "icon": "user",
+        "intro": "Turn your notes into a profile: a summary, a line about your break, and a skills list with evidence.",
+        "x": 540,
+        "y": 339,
+        "side": "down",
+    },
+    {
+        "n": "05",
+        "label": "05. NETWORKING",
+        "card": "community",
+        "icon": "users",
+        "intro": "Meet people at your stage: expecting, newly back, or planning a return.",
+        "x": 680,
+        "y": 322,
+        "side": "up",
+    },
+    {
+        "n": "06",
+        "label": "06. INTERVIEW PREP",
+        "card": "interview",
+        "icon": "message",
+        "intro": "Practise with talking points for a real job, and with a partner from your community.",
+        "x": 800,
+        "y": 243,
+        "side": "down",
+    },
+    {
+        "n": "07",
+        "label": "07. APPLYING TO ROLES",
+        "card": "jobs",
+        "icon": "briefcase",
+        "intro": "Work through sample postings with match scores, and pick the roles you want to apply for.",
+        "x": 930,
+        "y": 200,
+        "side": "up",
+    },
+]
+
+
+def roadmap():
+    """The steps, each placed on the road and linked to the tool page it belongs to."""
+    items = []
+    for s in STEPS:
+        _, url, _, _ = CARDS[s["card"]]
+        w = round(len(s["label"]) * 10.8) + 34  # pill width, in SVG units
+        d = 1 if s["side"] == "down" else -1  # badges sit below the road on the dips
+        items.append(
+            {
+                **s,
+                "href": url,
+                "w": w,
+                "px": s["x"] - w / 2,  # pill, badge and icon placement in the SVG
+                "py": s["y"] + 122 * d,
+                "by": s["y"] + 72 * d,
+                "ly1": s["y"] + 8 * d,
+                "ly2": s["y"] + 45 * d,
+                "ix": s["x"] - w / 2 + 12,
+                "lx": s["x"] - w / 2 + 36,
+            }
+        )
+    return items
+
+
 HITS = defaultdict(list)
 
 
@@ -101,8 +219,17 @@ def ip(req):
     return req.client.host if req.client else "?"
 
 
+# The scheme the browser actually used. The session cookie is only marked Secure over HTTPS:
+# browsers drop a Secure cookie on plain http, which would sign the user straight back out.
+# Behind Caddy the request arrives over http, so X-Forwarded-Proto carries the real scheme.
+SCHEME = ContextVar("scheme", default="http")
+
+
 @app.middleware("http")
 async def sec(req, nxt):
+    SCHEME.set(
+        req.headers.get("x-forwarded-proto", req.url.scheme).split(",")[-1].strip()
+    )
     r = await nxt(req)
     r.headers.update(
         {
@@ -163,7 +290,7 @@ def _cookie(r, sid):
         httponly=True,
         samesite="lax",
         max_age=2592000,
-        secure=os.getenv("COOKIE_SECURE") == "1",
+        secure=SCHEME.get() == "https",
     )
     return r
 
@@ -208,6 +335,7 @@ def register_get(req: Request):
 @app.post("/register")
 def register_post(
     req: Request,
+    background: BackgroundTasks,
     email: str = Form(..., max_length=200),
     password: str = Form(..., max_length=200),
     confirm: str = Form(..., max_length=200),
@@ -248,6 +376,8 @@ def register_post(
             None,
             err="That email is already registered. Log in instead.",
         )
+    if not email.endswith(".invalid"):  # demo accounts never get mail
+        background.add_task(send_welcome, email, name.strip()[:40])
     return go("/", sid)
 
 
@@ -294,9 +424,8 @@ def logout(req: Request):
 def home(req: Request):
     sid, u = current(req)
     if not u:
-        return page(req, "index.html", None, None, stages=STAGES, cards=[])
-    cards = [CARDS[k] for k in ORDER.get(u["stage"], ORDER["planning"])]
-    return page(req, "index.html", sid, u, stages=STAGES, cards=cards)
+        return page(req, "index.html", None, None, stages=STAGES, steps=[])
+    return page(req, "index.html", sid, u, stages=STAGES, steps=roadmap())
 
 
 @app.post("/stage")
@@ -529,42 +658,6 @@ def jobs_match(req: Request, ids: List[int] = Form([])):
     )
 
 
-@app.post("/jobs/paste")
-def jobs_paste(req: Request, jd: str = Form(..., max_length=6000)):
-    sid, u, r = need(req)
-    if r:
-        return r
-    sk = (u["prof"] or {}).get("skills", [])
-    fb = {"score": 0, "why": "", "talking_points": []}
-    d, src = ai.ask(
-        f'Skills: {ai_data.data(sk)}. Rate fit for the job in the data tags. JSON {{"score": int, "why": str, "talking_points": [str]}}\n{ai_data.data(jd)}',
-        fb,
-        schema=JobFit,
-        allow=allow(sid),
-    )
-    if src != "ai":  # never show a 0% score when the AI did not run
-        return page(
-            req,
-            "jobs.html",
-            sid,
-            u,
-            jobs=pick_jobs(job_pool()),
-            scores={},
-            paste=None,
-            notice="AI scoring is unavailable right now. Try again in a moment.",
-        )
-    return page(
-        req,
-        "jobs.html",
-        sid,
-        u,
-        jobs=pick_jobs(job_pool()),
-        scores={},
-        paste=d,
-        notice=None,
-    )
-
-
 @app.get("/site")
 def site(req: Request):
     sid, u, r = need(req)
@@ -681,18 +774,50 @@ def community(req: Request):
     return page(req, "community.html", sid, u)
 
 
-def send_mail(name, email, msg):
-    def clean(s):
-        return re.sub(r"[\r\n]+", " ", s)
+def smtp_configured() -> bool:
+    return bool(os.getenv("SMTP_USER") and os.getenv("SMTP_PASS"))
 
+
+def send_welcome(to: str, name: str) -> bool:
+    """Welcome email for a new member. Runs in the background; never breaks sign-up."""
+    if not smtp_configured():
+        return False
+    subject, text, page = mail_content.welcome(name)
     m = EmailMessage()
+    m["Subject"] = subject
+    m["From"] = os.getenv("SMTP_USER")
+    m["To"] = to
+    m.set_content(text)
+    m.add_alternative(page, subtype="html")
+    try:
+        port = int(os.getenv("SMTP_PORT", "465"))
+        host = os.getenv("SMTP_HOST", "smtpout.secureserver.net")
+        with (
+            smtplib.SMTP_SSL(host, port, timeout=15)
+            if port == 465
+            else smtplib.SMTP(host, port, timeout=15)
+        ) as smtp:
+            if port != 465:
+                smtp.starttls()
+            smtp.login(os.getenv("SMTP_USER"), os.getenv("SMTP_PASS"))
+            smtp.send_message(m)
+        return True
+    except Exception as e:
+        print("Welcome mail error:", type(e).__name__)
+        return False
+
+
+def send_mail(name, email, msg):
     user = os.getenv("SMTP_USER")
     pw = os.getenv("SMTP_PASS")
-    m["Subject"] = "hercomeback contact: " + clean(name)[:50]
+    subject, text, page = mail_content.build(name, email, msg)
+    m = EmailMessage()
+    m["Subject"] = subject
     m["From"] = user or "noreply@localhost"
     m["To"] = os.getenv("MAIL_TO") or user or "localhost"
-    m["Reply-To"] = clean(email)
-    m.set_content(f"From: {clean(name)} <{clean(email)}>\n\n{msg}")
+    m["Reply-To"] = mail_content._line(email, 200)
+    m.set_content(text)
+    m.add_alternative(page, subtype="html")
     if not (user and pw):
         # SMTP not configured: keep a local copy for development, but report it as not sent.
         os.makedirs("db", exist_ok=True)
@@ -753,3 +878,144 @@ def contact_send(
 def privacy(req: Request):
     sid, u = current(req)
     return page(req, "privacy.html", sid, u)
+
+
+def _upskill_page(req, sid, u, notice=None):
+    raw = db.q("select plan from u where sid=?", (sid,))[0]["plan"]
+    plan = json.loads(raw) if raw else None
+    return page(
+        req,
+        "upskilling.html",
+        sid,
+        u,
+        plan=plan,
+        providers=upskill.providers(),
+        notice=notice,
+    )
+
+
+@app.get("/upskilling")
+def upskilling(req: Request):
+    sid, u, r = need(req)
+    if r:
+        return r
+    return _upskill_page(req, sid, u)
+
+
+@app.post("/upskilling/plan")
+def upskilling_plan(req: Request):
+    sid, u, r = need(req)
+    if r:
+        return r
+    sk = (u["prof"] or {}).get("skills", [])
+    fb = upskill.fallback_plan(u["goal"])
+    d, src = ai.ask(
+        upskill.prompt(u["goal"], u["stage"], sk),
+        fb,
+        schema=StudyPlan,
+        max_tokens=900,
+        allow=allow(sid),
+    )
+    plan = upskill.clean(d)
+    db.q("update u set plan=? where sid=?", (json.dumps(plan), sid))
+    notice = (
+        None
+        if src == "ai"
+        else "AI is unavailable right now, so this is a starter plan for your goal."
+    )
+    return _upskill_page(req, sid, u, notice)
+
+
+@app.post("/upskilling/toggle")
+def upskilling_toggle(req: Request, week: int = Form(...), task: int = Form(...)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    raw = db.q("select plan from u where sid=?", (sid,))[0]["plan"]
+    if raw:
+        plan = json.loads(raw)
+        try:
+            item = plan["weeks"][week]["tasks"][task]
+            item["done"] = not item.get("done", False)
+            db.q("update u set plan=? where sid=?", (json.dumps(plan), sid))
+        except (IndexError, KeyError, TypeError):
+            pass  # stale form: ignore
+    return go("/upskilling", sid)
+
+
+def _interview_page(req, sid, u, paste=None, notice=None):
+    me = practice.record(
+        db.q("select practice from u where sid=?", (sid,))[0]["practice"]
+    )
+    return page(
+        req,
+        "interview.html",
+        sid,
+        u,
+        paste=paste,
+        notice=notice,
+        me=me,
+        pool=practice.pool(sid, me),
+    )
+
+
+@app.get("/interview")
+def interview(req: Request):
+    sid, u, r = need(req)
+    if r:
+        return r
+    return _interview_page(req, sid, u)
+
+
+@app.post("/interview/paste")
+def interview_paste(req: Request, jd: str = Form(..., max_length=6000)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    sk = (u["prof"] or {}).get("skills", [])
+    fb = {"score": 0, "why": "", "talking_points": []}
+    d, src = ai.ask(
+        f'Skills: {ai_data.data(sk)}. Rate fit for the job in the data tags. JSON {{"score": int, "why": str, "talking_points": [str]}}\n{ai_data.data(jd)}',
+        fb,
+        schema=JobFit,
+        allow=allow(sid),
+    )
+    if src != "ai":  # never show a 0% score when the AI did not run
+        return _interview_page(
+            req,
+            sid,
+            u,
+            notice="AI scoring is unavailable right now. Try again in a moment.",
+        )
+    return _interview_page(req, sid, u, paste=d)
+
+
+@app.post("/interview/practice")
+def interview_practice(
+    req: Request,
+    role: str = Form("", max_length=60),
+    years: int = Form(0, ge=0, le=40),
+    opt_in: str = Form(""),
+):
+    sid, u, r = need(req)
+    if r:
+        return r
+    rec = practice.record(
+        db.q("select practice from u where sid=?", (sid,))[0]["practice"]
+    )
+    rec.update(role=role.strip()[:60], years=years, opt_in=opt_in == "yes")
+    db.q("update u set practice=? where sid=?", (json.dumps(rec), sid))
+    return go("/interview", sid)
+
+
+@app.post("/interview/request")
+def interview_request(req: Request, partner: str = Form(..., max_length=120)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    rec = practice.record(
+        db.q("select practice from u where sid=?", (sid,))[0]["practice"]
+    )
+    rec["requests"] = (rec.get("requests", []) + [partner.strip()[:120]])[-10:]
+    db.q("update u set practice=? where sid=?", (json.dumps(rec), sid))
+    return go("/interview", sid)

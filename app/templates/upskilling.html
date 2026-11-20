@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% block c %}
+<h1>Upskilling</h1>
+<p class="lead">A study plan built from your goal and what you already know, with the places to study it. Tick off tasks as you go.</p>
+{% if notice %}<p class="note">{{notice}}</p>{% endif %}
+{% if not prof %}
+<div class="box"><p>Save your profile first, so the plan can build on your skills.</p><p><a href="/profile">Go to my profile</a></p></div>
+{% endif %}
+<form method="post" action="/upskilling/plan" class="box"><button>{{ 'Update my plan' if plan else 'Create my study plan' }}</button></form>
+{% if plan %}
+<h2>Topics to learn</h2>
+<p>{{ plan.topics|join(", ") }}</p>
+{% for w in plan.weeks %}{% set wi = loop.index0 %}
+<div class="box">
+<h3>{{ w.title }}</h3>
+{% for t in w.tasks %}
+<form method="post" action="/upskilling/toggle" class="todo-row">
+<input type="hidden" name="week" value="{{ wi }}"><input type="hidden" name="task" value="{{ loop.index0 }}">
+<span class="{{ 'done' if t.done }}">{{ t.text }}</span>
+<button class="ghost" aria-label="{{ 'Mark not done: ' if t.done else 'Mark done: ' }}{{ t.text }}">{{ 'Undo' if t.done else 'Done' }}</button>
+</form>
+{% endfor %}
+</div>
+{% endfor %}
+{% endif %}
+<h2>Where to study</h2>
+<p class="note">Search the topics above on these sites. Check the price and content of each course yourself.</p>
+<div class="grid">{% for p in providers %}<div class="box"><h3>{{p.provider}}</h3><p class="note">{{p.note}}</p><p><a href="{{p.url}}" rel="noopener">Visit {{p.provider}}</a></p></div>{% endfor %}</div>
+{% endblock %}

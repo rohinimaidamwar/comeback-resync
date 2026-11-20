@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block c %}
+<h1>Interview prep</h1>
+<p class="lead">Practise for a real interview: get talking points for a job, find a practice partner, and see what's coming next.</p>
+{% if notice %}<p class="note">{{notice}}</p>{% endif %}
+
+<h2>Talking points for a job</h2>
+<form method="post" action="/interview/paste" class="box"><label>Paste a job description<textarea name="jd" rows="5" maxlength="6000" required></textarea></label><button>Get talking points</button></form>
+{% if paste %}<div class="box"><h3>{{paste.score}}% fit</h3><p>{{paste.why}}</p><ul>{% for t in paste.talking_points %}<li>{{t}}</li>{% endfor %}</ul></div>{% endif %}
+
+<h2>Practice with a partner</h2>
+<p class="note">Partners are matched by role and years of experience. Opt in to appear in the pool. Only a first name, role and years are shown, never an email address.</p>
+<form method="post" action="/interview/practice" class="box">
+<label>Your role<input name="role" maxlength="60" value="{{ me.role or '' }}"></label>
+<label>Years of experience<input type="number" name="years" min="0" max="40" value="{{ me.years or 0 }}"></label>
+<label class="chk"><input type="checkbox" name="opt_in" value="yes" {{ 'checked' if me.opt_in }}> Show me in the practice pool</label>
+<button>Save</button>
+</form>
+{% if me.opt_in %}<p class="note">You are in the practice pool.</p>{% endif %}
+<div class="grid">{% for p in pool %}<div class="box"><p class="note">{{ 'Sample profile' if p.sample else 'Member' }}</p><h3>{{p.name}}</h3><p>{{p.role}} · {{p.years}} years</p><form method="post" action="/interview/request"><input type="hidden" name="partner" value="{{p.name}} ({{p.role}})"><button class="ghost">Request a practice session</button></form></div>{% endfor %}</div>
+{% if me.requests %}<p class="note">Requests saved: {{ me.requests|join(", ") }}. Scheduling is coming soon, so your requests are kept for now.</p>{% endif %}
+
+<h2>AI mock interview</h2>
+<div class="box"><span class="pill">Coming soon</span><p>Practise answers out loud and get feedback on structure and clarity.</p></div>
+{% endblock %}
