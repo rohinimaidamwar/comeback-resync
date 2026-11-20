@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% block c %}
+{% extends "base.html" %}{% block c %}{% from "_ai.html" import ai %}
 {% if not u %}
 <section class="hero-photo">
 <img src="/static/img/hero-group.jpg" alt="Four women working together on a colourful poster">
@@ -14,10 +14,23 @@
 <a class="tile" href="/money"><div><h3>Money basics</h3><p>EPF, tax and leave, with sources.</p></div></a>
 <a class="tile" href="/register"><div><h3>Get started</h3><p>Register and start your break journal.</p></div></a>
 </div>
+<div class="box ai-box">
+<h3>{{ ai() }} How hercomeback uses AI</h3>
+<ul>
+<li><b>Journal:</b> turns your notes into resume lines and tags your skills.</li>
+<li><b>Profile:</b> suggests skills, each backed by your own words.</li>
+<li><b>Jobs:</b> scores sample postings against your skills.</li>
+<li><b>Learn:</b> builds a study plan from your goal.</li>
+<li><b>Interview prep:</b> gives talking points for a job.</li>
+<li><b>Comeback Buddy:</b> answers questions about your profile and plans.</li>
+</ul>
+<p class="note">Powered by Claude, from Anthropic. AI only works with what you tell it, and you approve before anything is saved.</p>
+</div>
 <p class="credit">Photo: Karola G on Pexels (free licence).</p>
 {% else %}
 <h1>Your roadmap back to work</h1>
 <p class="lead">Seven steps from where you are now to walking back in. Open any milestone to see what it covers and the tool that goes with it.</p>
+<p class="note">{{ ai() }} marks where AI helps. You review everything before it is saved.</p>
 <form method="post" action="/stage" class="box stage-row"><label>Where are you now?<select name="stage">{% for k,v in stages.items() %}<option value="{{k}}" {{'selected' if u.stage==k}}>{{v}}</option>{% endfor %}</select></label>
 <label>What do you want next?<select name="goal">{% for g in ["A job","Freelance work","My own venture"] %}<option {{'selected' if u.goal==g}}>{{g}}</option>{% endfor %}</select></label><button>Save</button></form>
 {% include "_roadmap.html" %}

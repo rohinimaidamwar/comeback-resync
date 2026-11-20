@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% block c %}
+{% extends "base.html" %}{% block c %}{% from "_ai.html" import ai %}
 <h1>Upskilling</h1>
 <p class="lead">A study plan built from your goal and what you already know, with the places to study it. Tick off tasks as you go.</p>
 {% if notice %}<p class="note">{{notice}}</p>{% endif %}
@@ -7,7 +7,7 @@
 {% endif %}
 <form method="post" action="/upskilling/plan" class="box"><button>{{ 'Update my plan' if plan else 'Create my study plan' }}</button></form>
 {% if plan %}
-<h2>Topics to learn</h2>
+<h2>Topics to learn{% if plan.ai %} {{ ai("AI-generated plan") }}{% endif %}</h2>
 <p>{{ plan.topics|join(", ") }}</p>
 {% for w in plan.weeks %}{% set wi = loop.index0 %}
 <div class="box">

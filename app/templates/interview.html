@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% block c %}
+{% extends "base.html" %}{% block c %}{% from "_ai.html" import ai %}
 <div data-interview>
 <h1>Interview prep</h1>
 <p class="lead">Practise with peers who are on the same path, and get ready for the roles you want. A friendly, low-pressure way to feel interview-ready.</p>
@@ -66,7 +66,7 @@
 
 <section id="panel-talk" role="tabpanel" aria-labelledby="tab-talk"{% if tab != 'talk' %} hidden{% endif %}>
 <form method="post" action="/interview/paste" class="box"><h2>Talking points for a job</h2><label>Paste a job description<textarea name="jd" rows="6" maxlength="6000" required></textarea></label><button class="terra">Get talking points</button></form>
-{% if paste %}<div class="box"><h3>{{paste.score}}% fit</h3><p>{{paste.why}}</p><ul>{% for t in paste.talking_points %}<li>{{t}}</li>{% endfor %}</ul></div>{% endif %}
+{% if paste %}<div class="box"><h3>{{paste.score}}% fit {{ ai("AI-generated") }}</h3><p>{{paste.why}}</p><ul>{% for t in paste.talking_points %}<li>{{t}}</li>{% endfor %}</ul></div>{% endif %}
 </section>
 
 <section id="panel-ai" role="tabpanel" aria-labelledby="tab-ai"{% if tab != 'ai' %} hidden{% endif %}>

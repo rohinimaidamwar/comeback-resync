@@ -587,7 +587,15 @@ def profile_gen(req: Request, text: str = Form(..., max_length=6000)):
         notes.append(
             f"{removed} suggested skill(s) were removed because their evidence is not in what you wrote."
         )
-    return page(req, "profile.html", sid, u, draft=d, notice=" ".join(notes) or None)
+    return page(
+        req,
+        "profile.html",
+        sid,
+        u,
+        draft=d,
+        ai_draft=src == "ai",
+        notice=" ".join(notes) or None,
+    )
 
 
 @app.post("/profile/save")
@@ -676,7 +684,15 @@ def jobs_match(req: Request, ids: List[int] = Form([])):
         else "AI matching is unavailable right now. These are quick estimates from your skills."
     )
     return page(
-        req, "jobs.html", sid, u, jobs=js, scores=scores, paste=None, notice=notice
+        req,
+        "jobs.html",
+        sid,
+        u,
+        jobs=js,
+        scores=scores,
+        ai_scores=src == "ai",
+        paste=None,
+        notice=notice,
     )
 
 
@@ -1015,6 +1031,7 @@ def upskilling_plan(req: Request):
         allow=allow(sid),
     )
     plan = upskill.clean(d)
+    plan["ai"] = src == "ai"  # only label the plan as AI-written when it was
     db.q("update u set plan=? where sid=?", (json.dumps(plan), sid))
     notice = (
         None

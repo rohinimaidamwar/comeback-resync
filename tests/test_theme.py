@@ -11,7 +11,9 @@ def test_brand_is_hercomeback_everywhere_on_home(client):
     html = client.get("/").text
     assert "<title>hercomeback</title>" in html
     assert 'class="logo">hercomeback<' in html
-    assert "Comeback" not in html  # old brand name must not appear
+    assert "Comeback" not in html.replace(
+        "Comeback Buddy", ""
+    )  # old brand name must not appear
 
 
 def test_hero_uses_the_group_photo_with_alt_text(client):

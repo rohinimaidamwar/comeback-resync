@@ -1,7 +1,8 @@
-{% extends "base.html" %}{% block c %}<h1>Jobs</h1>
+{% extends "base.html" %}{% block c %}{% from "_ai.html" import ai %}<h1>Jobs</h1>
 <form method="post" action="/jobs/match">{% for j in jobs %}<input type="hidden" name="ids" value="{{j.id}}">{% endfor %}<button>Match these to my profile</button></form>
 <p class="note">These are sample postings for practice. The companies are fictional and none is a real opening. A new set appears each visit.</p>
 {% if notice %}<p class="note">{{notice}}</p>{% endif %}
+{% if ai_scores %}<p class="note">{{ ai("AI match") }} Fit scores and reasons are estimates written by AI from your skills.</p>{% endif %}
 {% for j in jobs %}{% set m = scores.get(j.id) %}<div class="box"><p class="note">Sample posting{% if j.returner_friendly %} · <span class="pill">Returner-friendly</span>{% endif %}</p><h3>{{j.title}}</h3><p class="note">{{j.company}} · {{j.location}}</p><p>{{j.summary}}</p><p class="note">Skills: {{j.tags|join(", ")}}</p>{% if m %}<p><b>{{m.score}}% fit.</b> {{m.why}}</p>{% endif %}</div>{% endfor %}
 
 {% endblock %}

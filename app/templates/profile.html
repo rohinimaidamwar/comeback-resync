@@ -1,8 +1,8 @@
-{% extends "base.html" %}{% block c %}<h1>Your profile</h1>
+{% extends "base.html" %}{% block c %}{% from "_ai.html" import ai %}<h1>Your profile</h1>
 {% if not prof %}<div class="empty"><p class="note">No profile saved yet.</p></div>{% endif %}
 {% if prof %}<div class="box"><h3>Saved profile</h3><p>{{prof.summary}}</p><p><b>Your break:</b> {{prof.brk}}</p><p>{{prof.skills|join(", ")}}</p></div>{% endif %}
 <form method="post" action="/profile" class="box"><label>Paste your old resume or describe your experience<textarea name="text" rows="7" maxlength="6000" required></textarea></label><p class="note">Your journal entries are included automatically.</p><button>Suggest my profile</button></form>
-{% if draft %}<form method="post" action="/profile/save" class="box"><h3>Review and approve</h3><p class="note">Nothing is saved until you click Save. Uncheck anything that is not true.</p>
+{% if draft %}<form method="post" action="/profile/save" class="box"><h3>Review and approve{% if ai_draft %} {{ ai("AI suggestion") }}{% endif %}</h3><p class="note">Nothing is saved until you click Save. Uncheck anything that is not true.</p>
 {% if notice %}<p class="note">{{notice}}</p>{% endif %}
 <label>Summary<textarea name="summary" rows="3">{{draft.summary}}</textarea></label><label>How to describe your break<textarea name="brk" rows="2">{{draft.break_statement}}</textarea></label>
 {% for s in draft.skills %}<label class="chk"><input type="checkbox" name="skills" value="{{s.name}}" checked> <b>{{s.name}}</b> <span class="note">from: {{s.evidence}}</span></label>{% endfor %}
