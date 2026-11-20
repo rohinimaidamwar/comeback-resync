@@ -10,7 +10,7 @@ HERO = APP / "static" / "img" / "hero-group.jpg"
 def test_brand_is_hercomeback_everywhere_on_home(client):
     html = client.get("/").text
     assert "<title>hercomeback</title>" in html
-    assert 'class="logo">hercomeback<' in html
+    assert 'class="logo"><b>her</b>comeback<' in html
     assert "Comeback" not in html.replace(
         "Comeback Buddy", ""
     )  # old brand name must not appear

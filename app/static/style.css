@@ -1,7 +1,7 @@
 :root{--bg:#FBF6EE;--ink:#3A3128;--acc:#8A6A4F;--soft:#F0E6D6;--line:#E8DCC9;--sage:#A7B49A;--muted:#7D6F62}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
 header,main,footer{max-width:720px;margin:0 auto;padding:12px 16px}header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
-nav{display:flex;flex-wrap:wrap;gap:4px 14px}a{color:var(--acc)}.logo{font:700 1.5rem Georgia,serif;color:var(--acc);text-decoration:none}
+nav{display:flex;flex-wrap:wrap;gap:4px 14px}a{color:var(--acc)}.logo{font:700 1.5rem Georgia,serif;color:#3A2E26;text-decoration:none}.logo b{color:var(--terra)}
 h1,h2,h3{font-family:Georgia,serif;line-height:1.2}h1{font-size:1.8rem}
 .box,.tile{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
 .tile{display:flex;gap:12px;align-items:flex-start;text-decoration:none;color:inherit}.tile h3{margin:0 0 4px;color:var(--acc)}.tile p{margin:0;color:var(--muted)}
@@ -58,7 +58,7 @@ img{max-width:100%;height:auto}
 @media (min-width:761px) and (max-width:1023px){
  .side{width:76px;flex:0 0 76px;padding:20px 10px;text-align:center}
  .side .logo{font-size:0;margin:0 0 24px}
- .side .logo::before{content:"h";font:italic 700 1.6rem Georgia,serif;color:#8A6A4F}
+ .side .logo::before{content:"h";font:italic 700 1.6rem Georgia,serif;color:var(--terra)}
  .side-nav a{justify-content:center;padding:12px 0;font-size:0;gap:0}
  .side-nav a img{width:20px;height:20px;flex:0 0 20px}
 }

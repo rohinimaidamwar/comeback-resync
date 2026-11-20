@@ -9,13 +9,13 @@
 {%- endmacro %}
 {% if u %}
 <div class="shell">
-<aside class="side"><a href="/" class="logo">hercomeback</a>
+<aside class="side"><a href="/" class="logo"><b>her</b>comeback</a>
 <nav class="side-nav" aria-label="Main">{% for href,label,icon in NAV %}<a href="{{href}}" aria-label="{{label}}"{% if request.url.path == href %} class="on" aria-current="page"{% endif %}><img src="/static/icons/{{icon}}.svg" alt="">{{label}}</a>{% endfor %}</nav>
 </aside>
 <div class="content">
 <header class="top"><a class="ask-link" href="/ask" aria-label="Comeback Buddy, AI assistant"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M12 2l2.3 6.7L21 11l-6.7 2.3L12 20l-2.3-6.7L3 11l6.7-2.3z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>Comeback Buddy <span class="ai-tag">AI</span></a><details class="user"><summary><span class="hello">Welcome{% if u.name %}, {{u.name}}{% endif %}</span></summary><div class="menu"><form method="post" action="/logout"><button class="link">Log out</button></form><a href="/delete">Delete my data</a></div></details></header>
 {% else %}
-<header><a href="/" class="logo">hercomeback</a><nav>
+<header><a href="/" class="logo"><b>her</b>comeback</a><nav>
 <a href="/contact">Contact</a><a href="/login">Log in</a><a href="/register">Register</a>
 </nav></header>
 {% endif %}
