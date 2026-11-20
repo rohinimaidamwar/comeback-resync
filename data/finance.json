@@ -1,5 +1,30 @@
 [
-{"title":"EPF during a career break","answer":"TODO: add a short answer after checking the EPFO website.","source_url":"TODO","verified":false},
-{"title":"Maternity benefit basics","answer":"TODO: add a short answer after checking official sources.","source_url":"TODO","verified":false},
-{"title":"Filing a tax return with a gap","answer":"TODO: add a short answer after checking the Income Tax Department site.","source_url":"TODO","verified":false}
+  {
+    "title": "EPF when you leave a job",
+    "answer": "When you leave a job, you can apply for your EPF money on the EPFO portal under 'Withdraw PF'. How much you can take out, and when, depends on the current rules, which have changed recently. Check the rules on the official site before you apply.",
+    "source_url": "https://www.epfo.gov.in/",
+    "verified": true,
+    "checked_on": "2026-11-18"
+  },
+  {
+    "title": "Maternity leave basics",
+    "answer": "Eligible women employees are entitled to paid maternity leave under the Maternity Benefit Act. The length and conditions depend on the current law and your employer. Check the official clarification before you plan your leave.",
+    "source_url": "https://labour.gov.in/sites/default/files/the_maternity_benefit_amendment_act2017_-clarifications.pdf",
+    "verified": false,
+    "checked_on": null
+  },
+  {
+    "title": "Filing an income tax return after a break",
+    "answer": "Income tax returns are filed on the e-filing portal, incometax.gov.in. Due dates are set for each assessment year and are sometimes extended, so check the portal's current notice before you file.",
+    "source_url": "https://www.incometax.gov.in/iec/foportal/",
+    "verified": true,
+    "checked_on": "2026-11-18"
+  },
+  {
+    "title": "Freelance income and tax",
+    "answer": "Freelance income can be taxed differently from salary, and the return form you need can depend on how you earn it. Check the portal to confirm which form applies to you.",
+    "source_url": "https://www.incometax.gov.in/iec/foportal/",
+    "verified": false,
+    "checked_on": null
+  }
 ]

@@ -1,4 +1,4 @@
-# Comeback
+# hercomeback
 A journey app for women who are expecting, new mothers, or returning from a career break. FastAPI + Jinja2 + SQLite + Claude.
 
 ## Run locally
@@ -20,4 +20,4 @@ If SMTP login fails, try port 587 (STARTTLS) or host smtp.titan.email.
 - Pin dependency versions, and never commit .env.
 
 ## Not built yet (roadmap)
-Ask Comeback agent (tool calling), handover document, pitch drafts, Hindi/Marathi, domain suggestions, automated tests.
+Ask hercomeback agent (tool calling), handover document, pitch drafts, Hindi/Marathi, domain suggestions, automated tests.

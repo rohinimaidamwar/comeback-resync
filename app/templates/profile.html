@@ -1,4 +1,5 @@
 {% extends "base.html" %}{% block c %}<h1>Your profile</h1>
+{% if not prof %}<div class="empty"><p class="note">No profile saved yet.</p></div>{% endif %}
 {% if prof %}<div class="box"><h3>Saved profile</h3><p>{{prof.summary}}</p><p><b>Your break:</b> {{prof.brk}}</p><p>{{prof.skills|join(", ")}}</p></div>{% endif %}
 <form method="post" action="/profile" class="box"><label>Paste your old resume or describe your experience<textarea name="text" rows="7" maxlength="6000" required></textarea></label><p class="note">Your journal entries are included automatically.</p><button>Suggest my profile</button></form>
 {% if draft %}<form method="post" action="/profile/save" class="box"><h3>Review and approve</h3><p class="note">Nothing is saved until you click Save. Uncheck anything that is not true.</p>

@@ -39,3 +39,13 @@ class SiteCopy(BaseModel):
     headline: str
     about: str
     services: list[str] = Field(default_factory=list)
+
+
+class JobPosting(BaseModel):
+    id: int
+    title: str
+    company: str
+    location: str = ""
+    returner_friendly: bool = False
+    tags: list[str] = Field(default_factory=list)
+    summary: str = ""

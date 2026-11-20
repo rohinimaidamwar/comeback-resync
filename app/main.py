@@ -1,5 +1,7 @@
+import hashlib
 import json
 import os
+import random
 import re
 import secrets
 import smtplib
@@ -14,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app import ai, auth, db
 from app import ai_data, evidence
-from app.schemas import JobFit, JobMatches, JournalLine, Profile, SiteCopy
+from app.schemas import JobFit, JobMatches, JobPosting, JournalLine, Profile, SiteCopy
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 app = FastAPI()
@@ -28,14 +30,50 @@ STAGES = {
     "planning": "I'm planning my return",
 }
 GOALS = ["A job", "Freelance work", "My own venture"]
-T.env.globals.update(STAGES=STAGES, GOALS=GOALS)  # used by the sign-up form
+T.env.globals.update(
+    STAGES=STAGES,
+    GOALS=GOALS,
+    NAV=[
+        ("/journal", "Journal", "notebook"),
+        ("/profile", "Profile", "user"),
+        ("/jobs", "Jobs", "briefcase"),
+        ("/site", "My site", "globe"),
+        ("/money", "Money", "wallet"),
+        ("/community", "Community", "users"),
+    ],
+)
+# Version tag from the stylesheet's content, so a changed CSS file gets a new URL and browsers refetch it.
+with open(os.path.join(BASE, "static", "style.css"), "rb") as _f:
+    T.env.globals["css_v"] = hashlib.sha256(_f.read()).hexdigest()[
+        :10
+    ]  # used by the sign-up form
 CARDS = {
-    "journal": ("Break journal", "/journal", "Log a small win in a minute."),
-    "profile": ("Profile", "/profile", "Turn your story into a profile."),
-    "jobs": ("Jobs", "/jobs", "Match openings or paste any job."),
-    "site": ("My site", "/site", "Publish a portfolio page."),
-    "money": ("Money basics", "/money", "EPF, tax and leave, with sources."),
-    "community": ("Community", "/community", "Meet people at your stage."),
+    "journal": (
+        "Break journal",
+        "/journal",
+        "Log a small win in a minute.",
+        "journal.svg",
+    ),
+    "profile": (
+        "Profile",
+        "/profile",
+        "Turn your story into a profile.",
+        "profile.svg",
+    ),
+    "jobs": ("Jobs", "/jobs", "Match openings or paste any job.", "jobs.svg"),
+    "site": ("My site", "/site", "Publish a portfolio page.", "site.svg"),
+    "money": (
+        "Money basics",
+        "/money",
+        "EPF, tax and leave, with sources.",
+        "money.svg",
+    ),
+    "community": (
+        "Community",
+        "/community",
+        "Meet people at your stage.",
+        "community.svg",
+    ),
 }
 ORDER = {
     "expecting": ["money", "journal", "community", "profile"],
@@ -101,7 +139,7 @@ def current(req):
         return None, None
     # The password hash is never loaded for normal pages.
     rows = db.q(
-        "select sid, stage, goal, profile, email from u where sid=? and email is not null and email != ''",
+        "select sid, stage, goal, profile, email, name from u where sid=? and email is not null and email != ''",
         (sid,),
     )
     if not rows:
@@ -173,6 +211,7 @@ def register_post(
     email: str = Form(..., max_length=200),
     password: str = Form(..., max_length=200),
     confirm: str = Form(..., max_length=200),
+    name: str = Form("", max_length=40),
     stage: str = Form("planning", max_length=20),
     goal: str = Form("A job", max_length=40),
 ):
@@ -198,8 +237,8 @@ def register_post(
         stage = stage if stage in STAGES else "planning"
         goal = goal if goal in GOALS else "A job"
         db.q(
-            "insert into u(sid,stage,goal,email,pw) values(?,?,?,?,?)",
-            (sid, stage, goal, email, auth.hash_pw(password)),
+            "insert into u(sid,stage,goal,email,pw,name) values(?,?,?,?,?,?)",
+            (sid, stage, goal, email, auth.hash_pw(password), name.strip()[:40]),
         )
     except sqlite3.IntegrityError:
         return page(
@@ -283,13 +322,14 @@ def demo(req: Request):
             return go("/login")
         sid = secrets.token_urlsafe(16)
         db.q(
-            "insert into u(sid,stage,goal,email,pw) values(?,?,?,?,?)",
+            "insert into u(sid,stage,goal,email,pw,name) values(?,?,?,?,?,?)",
             (
                 sid,
                 "expecting",
                 "A job",
                 f"demo-{secrets.token_hex(6)}@demo.invalid",
                 "!",
+                "Priya",
             ),
         )
     p = {
@@ -428,20 +468,37 @@ def profile_save(
     return go("/profile", sid)
 
 
+JOB_PICKS = 5  # how many sample postings each visit shows
+
+
+def job_pool():
+    """Sample postings. They are fictional and labelled as samples in the UI."""
+    return [JobPosting.model_validate(j).model_dump() for j in load("sample_jobs.json")]
+
+
+def pick_jobs(pool, rng=random, k=JOB_PICKS):
+    """A different random selection each time, so the page never looks the same twice."""
+    return rng.sample(pool, min(k, len(pool)))
+
+
 @app.get("/jobs")
 def jobs(req: Request):
     sid, u, r = need(req)
     if r:
         return r
-    return page(req, "jobs.html", sid, u, jobs=load("jobs.json"), scores={}, paste=None)
+    return page(
+        req, "jobs.html", sid, u, jobs=pick_jobs(job_pool()), scores={}, paste=None
+    )
 
 
 @app.post("/jobs/match")
-def jobs_match(req: Request):
+def jobs_match(req: Request, ids: List[int] = Form([])):
     sid, u, r = need(req)
     if r:
         return r
-    js = load("jobs.json")
+    pool = job_pool()
+    wanted = set(ids)
+    js = [j for j in pool if j["id"] in wanted] or pick_jobs(pool)
     sk = (u["prof"] or {}).get("skills", [])
     low = {s.lower() for s in sk}
     fb = {
@@ -491,7 +548,7 @@ def jobs_paste(req: Request, jd: str = Form(..., max_length=6000)):
             "jobs.html",
             sid,
             u,
-            jobs=load("jobs.json"),
+            jobs=pick_jobs(job_pool()),
             scores={},
             paste=None,
             notice="AI scoring is unavailable right now. Try again in a moment.",
@@ -501,7 +558,7 @@ def jobs_paste(req: Request, jd: str = Form(..., max_length=6000)):
         "jobs.html",
         sid,
         u,
-        jobs=load("jobs.json"),
+        jobs=pick_jobs(job_pool()),
         scores={},
         paste=d,
         notice=None,
@@ -631,7 +688,7 @@ def send_mail(name, email, msg):
     m = EmailMessage()
     user = os.getenv("SMTP_USER")
     pw = os.getenv("SMTP_PASS")
-    m["Subject"] = "Comeback contact: " + clean(name)[:50]
+    m["Subject"] = "hercomeback contact: " + clean(name)[:50]
     m["From"] = user or "noreply@localhost"
     m["To"] = os.getenv("MAIL_TO") or user or "localhost"
     m["Reply-To"] = clean(email)
