@@ -173,10 +173,10 @@ def test_unverified_statistics_are_not_shown_in_the_app(client):
         assert "73%" not in html and "7 million" not in html, path
 
 
-def test_money_is_not_in_the_menu_on_login_and_register(client):
-    for path in ["/login", "/register"]:
+def test_visitors_see_no_money_link_or_tile_before_signing_in(client):
+    for path in ["/", "/login", "/register", "/contact", "/privacy"]:
         html = client.get(path).text
-        assert 'href="/money"' not in html, path
+        assert 'href="/money"' not in html and "Money basics" not in html, path
         assert (
             'href="/contact"' in html
             and 'href="/login"' in html
@@ -184,6 +184,18 @@ def test_money_is_not_in_the_menu_on_login_and_register(client):
         )
 
 
-def test_money_stays_in_the_menu_on_other_public_pages(client):
-    for path in ["/", "/contact", "/privacy", "/money"]:
-        assert '<a href="/money">Money</a>' in client.get(path).text, path
+def test_visitor_home_still_offers_the_demo_and_sign_up(client):
+    html = client.get("/").text
+    assert (
+        "Get started" in html
+        and 'class="btn-outline" href="/register">Create my account</a>' in html
+    )
+    assert "See a demo" in html and "Try the demo" in html
+
+
+def test_money_basics_is_still_part_of_the_signed_in_journey(logged_in):
+    assert 'href="/money"' in logged_in.get("/journal").text  # sidebar
+    assert (
+        'class="road-link" href="/money"' in logged_in.get("/").text
+    )  # roadmap step 03
+    assert logged_in.get("/money").status_code == 200
