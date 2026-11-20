@@ -435,3 +435,21 @@ def test_ai_sparkle_icon_is_served_and_used_on_bot_replies(client):
     assert client.get("/static/icons/sparkle.svg").status_code == 200
     css = client.get("/static/style.css").text
     assert ".msg.bot:not(.wait)::before" in css and "/static/icons/sparkle.svg" in css
+
+
+def test_markdown_is_removed_from_replies():
+    raw = "**Product Manager** is best.\n- Skills: roadmapping\n* Returner-friendly\n## Heading\nUse `code` here."
+    out = agent.plain(raw)
+    assert "**" not in out and "`" not in out and "##" not in out
+    assert "• Skills: roadmapping" in out and "• Returner-friendly" in out
+    assert out.startswith("Product Manager is best.")
+
+
+def test_the_run_returns_plain_text():
+    fake = FakeClient([reply([text("**Great** match.\n- Point one")])])
+    out = agent.run("s1", "hi", TOOLS, client=fake)
+    assert out["reply"] == "Great match.\n• Point one"
+
+
+def test_system_prompt_asks_for_plain_text():
+    assert "Write plain text only" in agent.SYSTEM
