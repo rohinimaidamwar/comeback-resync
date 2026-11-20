@@ -44,6 +44,11 @@ AI_DOWN = "AI is unavailable right now, so this is a starting point. Edit it by 
 STAGES = {
     "expecting": "I'm expecting",
     "newborn": "I have a newborn",
+    "childcare": "I'm raising or educating my children",
+    "caregiving": "I'm caring for a parent or family member",
+    "health": "I'm on a health or recovery break",
+    "relocating": "I'm relocating or studying",
+    "earlycareer": "I'm early in my career, starting again",
     "planning": "I'm planning my return",
 }
 GOALS = ["A job", "Freelance work", "My own venture"]
@@ -153,7 +158,7 @@ STEPS = [
         "label": "05. NETWORKING",
         "card": "community",
         "icon": "users",
-        "intro": "Meet people at your stage: expecting, newly back, or planning a return.",
+        "intro": "Meet people at your stage, whatever the reason for your break.",
         "x": 680,
         "y": 322,
         "side": "up",
@@ -1003,7 +1008,7 @@ def upskilling_plan(req: Request):
     sk = (u["prof"] or {}).get("skills", [])
     fb = upskill.fallback_plan(u["goal"])
     d, src = ai.ask(
-        upskill.prompt(u["goal"], u["stage"], sk),
+        upskill.prompt(u["goal"], STAGES.get(u["stage"], u["stage"]), sk),
         fb,
         schema=StudyPlan,
         max_tokens=900,
@@ -1189,7 +1194,7 @@ def _ask_tools(u):
             "break_statement": prof.get("brk", ""),
             "skills": prof.get("skills", []),
             "goal": u["goal"],
-            "stage": u["stage"],
+            "stage": STAGES.get(u["stage"], u["stage"]),
         }
 
     def list_jobs():

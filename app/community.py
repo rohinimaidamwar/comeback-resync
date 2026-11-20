@@ -21,14 +21,13 @@ CIRCLES = {
     "newborn": ("Newborn phase", "Tiny five-minute wins while sleep is short."),
     "returning": (
         "Returning soon",
-        "Get ready to walk back in: profile, jobs and interviews.",
+        "Get ready to walk back in after any kind of break: profile, jobs and interviews.",
     ),
 }
 STAGE_TO_CIRCLE = {
     "expecting": "expecting",
     "newborn": "newborn",
-    "planning": "returning",
-}
+}  # every other stage: "returning"
 MAX_POST = 500
 
 EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
@@ -89,7 +88,7 @@ def leave(sid: str, slug: str) -> bool:
 
 
 def circle_cards(sid: str, stage: str) -> list[dict]:
-    mine, n, suggested = joined(sid), counts(), STAGE_TO_CIRCLE.get(stage)
+    mine, n, suggested = joined(sid), counts(), STAGE_TO_CIRCLE.get(stage, "returning")
     return [
         {
             "slug": slug,
