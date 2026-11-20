@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% block c %}
+<div data-community>
+<p><a href="/community">← All circles</a></p>
+<h1>{{circle_name}}</h1>
+<p class="lead">{{about}}</p>
+<p class="note">{{members}} member{{ '' if members == 1 else 's' }}. Posts are visible to circle members and show a first name only.</p>
+{% if msg %}<p class="note" role="status">{{msg}}</p>{% endif %}
+<form method="post" action="/community/{{slug}}/post" class="box">
+<label for="post-body">Share a win, a question or a tip</label>
+<textarea id="post-body" name="body" rows="3" maxlength="{{max_post}}" required></textarea>
+<div class="actions"><button class="terra">Post</button><span class="note" id="post-count" aria-live="polite">{{max_post}} characters left</span></div>
+<p class="note">Be kind. Please don't share email addresses, phone numbers or links.</p>
+</form>
+<div class="posts">
+{% for p in posts %}
+<article class="post">
+<div class="post-head"><b>{{p.name}}</b>{% if p.sample %}<span class="tag">Sample</span>{% else %}<span class="note">{{p.when}}</span>{% endif %}</div>
+<p>{{p.body}}</p>
+{% if p.mine %}<form method="post" action="/community/{{slug}}/post/delete"><input type="hidden" name="post_id" value="{{p.id}}"><button class="ghost">Delete</button></form>{% endif %}
+</article>
+{% endfor %}
+</div>
+</div>
+<script src="/static/community.js" defer></script>
+{% endblock %}

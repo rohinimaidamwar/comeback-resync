@@ -24,7 +24,9 @@ def init():
     c = db()
     c.executescript("""create table if not exists u(sid text primary key, stage text, goal text, profile text);
 create table if not exists j(id integer primary key, sid text, raw text, line text);
-create table if not exists pg(slug text primary key, sid text, content text, live int);""")
+create table if not exists pg(slug text primary key, sid text, content text, live int);
+create table if not exists memberships(sid text, circle text, primary key(sid, circle));
+create table if not exists posts(id integer primary key, circle text, sid text, body text, ts integer);""")
     cols = {r[1] for r in c.execute("pragma table_info(u)")}
     if "email" not in cols:
         c.execute("alter table u add column email text")
@@ -46,3 +48,22 @@ create table if not exists pg(slug text primary key, sid text, content text, liv
     )
     c.commit()
     c.close()
+
+
+# Tables whose rows belong to a user through the session token (sid).
+LINKED = ("j", "pg", "memberships", "posts")
+
+
+def rotate_sid(old: str, new: str) -> None:
+    """Give a user a new session token and move everything linked to the old one.
+
+    All in one transaction, so a failure cannot leave data pointing at a token nobody has.
+    """
+    c = db()
+    try:
+        c.execute("update u set sid=? where sid=?", (new, old))
+        for table in LINKED:
+            c.execute(f"update {table} set sid=? where sid=?", (new, old))
+        c.commit()
+    finally:
+        c.close()

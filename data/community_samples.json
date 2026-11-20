@@ -1,0 +1,17 @@
+{
+  "stories": [
+    {"id": 1, "circle": "expecting", "title": "A handover that fit on one page", "body": "A week before leave I wrote a one-page handover: what is running, who to ask, and where things live. It took an evening. When I came back, nobody had needed to call me, and I felt calm about leaving.", "sample": true},
+    {"id": 2, "circle": "expecting", "title": "Telling my manager early", "body": "I was nervous about the conversation, so I wrote down three things I wanted to agree on: dates, cover, and how often we would stay in touch. Having the list made it feel like planning, not asking permission.", "sample": true},
+    {"id": 3, "circle": "newborn", "title": "Five minutes was enough", "body": "Some weeks all I managed was one line in my journal on my phone while feeding. I thought it did not count. Months later those lines turned into most of my resume summary.", "sample": true},
+    {"id": 4, "circle": "returning", "title": "Explaining the gap without apologising", "body": "I used to start every interview by apologising for my break. A friend suggested I lead with what I had done instead: a course, some volunteering, and running a household budget. The tone of the conversations changed.", "sample": true},
+    {"id": 5, "circle": "returning", "title": "Practising with a peer", "body": "I did two practice interviews with someone returning to a similar role. We swapped feedback kindly. By the real interview I had already said my answers out loud, and that made all the difference.", "sample": true}
+  ],
+  "posts": [
+    {"circle": "expecting", "name": "Meera", "body": "Does anyone have a handover template they liked? I am starting mine this weekend.", "sample": true},
+    {"circle": "expecting", "name": "Divya", "body": "I found it easier to write the handover as a list of questions people might ask me.", "sample": true},
+    {"circle": "newborn", "name": "Asha", "body": "Today's tiny win: I wrote down one thing I fixed at work last year. Five minutes, done.", "sample": true},
+    {"circle": "newborn", "name": "Farah", "body": "Voice notes while the baby naps have been a lifesaver for my journal.", "sample": true},
+    {"circle": "returning", "name": "Lakshmi", "body": "Looking for someone to practise a product manager interview with next week.", "sample": true},
+    {"circle": "returning", "name": "Nisha", "body": "Tip: I list three things I did during my break at the start of every interview now.", "sample": true}
+  ]
+}

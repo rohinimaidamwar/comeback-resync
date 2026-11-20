@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% block c %}
+<div data-ask>
+<h1>Comeback Buddy <span class="ai-pill"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M12 2l2.3 6.7L21 11l-6.7 2.3L12 20l-2.3-6.7L3 11l6.7-2.3z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>AI assistant</span></h1>
+<p class="lead">Ask me about your profile, the sample jobs, or your study plan. I can also draft a journal entry for you to confirm. I never save anything without your click.</p>
+<noscript><p class="note">The chat needs JavaScript. You can still use Journal, Jobs and Learn from the menu.</p></noscript>
+<div class="chat box">
+<div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Conversation">
+<div class="msg bot">Hi! I'm your Comeback Buddy. What would you like help with today?</div>
+</div>
+<div class="suggest" id="suggest">
+<button type="button" class="fchip" data-q="What jobs fit me best?">What jobs fit me best?</button>
+<button type="button" class="fchip" data-q="What should I study this week?">What should I study this week?</button>
+<button type="button" class="fchip" data-q="Help me add a win to my journal. I finished an online data analysis course.">Add a win to my journal</button>
+</div>
+<form id="chat-form" class="chat-form" autocomplete="off">
+<label class="sr" for="chat-input">Your message</label>
+<input id="chat-input" name="message" maxlength="600" placeholder="Type your question…" required>
+<button id="chat-send" class="terra">Send</button>
+</form>
+<p class="note">Comeback Buddy is an AI assistant and can make mistakes, so check anything important. Job postings are fictional samples. This is general guidance, not legal, tax or medical advice.</p>
+</div>
+</div>
+<script src="/static/ask.js" defer></script>
+{% endblock %}

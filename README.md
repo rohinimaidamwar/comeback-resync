@@ -20,4 +20,4 @@ If SMTP login fails, try port 587 (STARTTLS) or host smtp.titan.email.
 - Pin dependency versions, and never commit .env.
 
 ## Not built yet (roadmap)
-Ask hercomeback agent (tool calling), handover document, pitch drafts, Hindi/Marathi, domain suggestions, automated tests.
+Handover document, pitch drafts, Hindi/Marathi, domain suggestions, an AI mock interview, and scheduling between practice partners. Comeback Buddy (a tool-calling chat that can propose journal entries for the user to confirm) is built.

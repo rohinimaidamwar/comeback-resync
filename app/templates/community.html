@@ -1,3 +1,37 @@
-{% extends "base.html" %}{% block c %}<h1>Community</h1><p>Circles group women at the same stage. To join one, <a href="/contact">send us a message</a> naming it.</p>
-<div class="grid"><div class="tile"><h3>Expecting</h3></div><div class="tile"><h3>Newborn phase</h3></div><div class="tile"><h3>Returning soon</h3></div></div>
-<h2>Stories</h2><div class="box"><p>Sample story: "I logged one thing a week during leave. When I applied, my resume was already half written."</p></div>{% endblock %}
+{% extends "base.html" %}{% block c %}
+<div data-community>
+<h1>Community</h1>
+<p class="lead">Small circles of women at the same stage. Join one to read and share short notes, and read a few stories for encouragement.</p>
+{% if msg %}<p class="note" role="status">{{msg}}</p>{% endif %}
+
+<h2>Circles</h2>
+<div class="circles">
+{% for c in circles %}
+<article class="circle{{ ' joined' if c.joined }}">
+<div class="circle-head"><h3>{{c.name}}</h3>{% if c.suggested %}<span class="badge">Suggested for you</span>{% endif %}</div>
+<p>{{c.about}}</p>
+<p class="note">{{ c.members }} member{{ '' if c.members == 1 else 's' }}{% if c.members == 0 %} · be the first to join{% endif %}</p>
+<div class="actions">
+{% if c.joined %}<a class="btn-link" href="/community/{{c.slug}}">Open circle</a>
+<form method="post" action="/community/leave"><input type="hidden" name="circle" value="{{c.slug}}"><button class="ghost">Leave</button></form>
+{% else %}<form method="post" action="/community/join"><input type="hidden" name="circle" value="{{c.slug}}"><button class="terra">Join circle</button></form>{% endif %}
+</div>
+</article>
+{% endfor %}
+</div>
+
+<h2>Stories</h2>
+<p class="note">These are fictional sample stories, shared to show what a circle can feel like.</p>
+<div class="filters" role="group" aria-label="Filter stories" hidden>
+<button type="button" class="fchip on" data-filter="all" aria-pressed="true">All stories</button>
+{% for slug, name in circle_names.items() %}<button type="button" class="fchip" data-filter="{{slug}}" aria-pressed="false">{{name}}</button>{% endfor %}
+</div>
+<div class="stories">
+{% for s in stories %}
+<details class="story" data-circle="{{s.circle}}"><summary><span class="tag">{{ circle_names[s.circle] }}</span> {{s.title}}</summary><p>{{s.body}}</p><p class="note">Sample story</p></details>
+{% endfor %}
+</div>
+<p class="note" id="no-stories" hidden>No stories in this circle yet.</p>
+</div>
+<script src="/static/community.js" defer></script>
+{% endblock %}

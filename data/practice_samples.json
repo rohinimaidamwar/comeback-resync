@@ -1,6 +1,8 @@
 [
-{"name": "Meera", "role": "Product manager", "years": 6, "sample": true},
-{"name": "Asha", "role": "Customer success lead", "years": 4, "sample": true},
-{"name": "Lakshmi", "role": "Data analyst", "years": 3, "sample": true},
-{"name": "Nisha", "role": "Content strategist", "years": 8, "sample": true}
+{"name": "Meera", "role": "Product manager", "years": 6, "want_interview": true, "can_interview": true, "sample": true},
+{"name": "Asha", "role": "Customer success lead", "years": 4, "want_interview": false, "can_interview": true, "sample": true},
+{"name": "Lakshmi", "role": "Data analyst", "years": 3, "want_interview": true, "can_interview": false, "sample": true},
+{"name": "Nisha", "role": "Content strategist", "years": 8, "want_interview": true, "can_interview": true, "sample": true},
+{"name": "Divya", "role": "UX researcher", "years": 5, "want_interview": false, "can_interview": true, "sample": true},
+{"name": "Farah", "role": "Operations associate", "years": 2, "want_interview": true, "can_interview": false, "sample": true}
 ]

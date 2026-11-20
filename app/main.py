@@ -12,12 +12,19 @@ from contextvars import ContextVar
 from email.message import EmailMessage
 from typing import List
 from fastapi import BackgroundTasks, FastAPI, Request, Form
-from fastapi.responses import RedirectResponse, HTMLResponse, PlainTextResponse
+from pydantic import BaseModel, Field
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from app import ai, auth, db
 from app import ai_data, evidence
-from app import mail_content, practice, upskill
+from app import agent, mail_content, practice, upskill
+from app import community as community_mod
 from app.schemas import (
     JobFit,
     JobMatches,
@@ -406,15 +413,17 @@ def login_post(
         return page(req, "login.html", None, None, err="Email or password is wrong.")
     # New session token on every login, so an old copy of the cookie stops working.
     new_sid = secrets.token_urlsafe(16)
-    db.q("update u set sid=? where sid=?", (new_sid, u["sid"]))
+    agent.forget(u["sid"])
+    db.rotate_sid(u["sid"], new_sid)
     return go("/", new_sid)
 
 
 @app.post("/logout")
 def logout(req: Request):
     sid, u = current(req)
+    agent.forget(sid)
     if u:  # invalidate the session on the server, not just in the browser
-        db.q("update u set sid=? where sid=?", (secrets.token_urlsafe(16), sid))
+        db.rotate_sid(sid, secrets.token_urlsafe(16))
     r = RedirectResponse("/", 303)
     r.delete_cookie("sid")
     return r
@@ -489,7 +498,8 @@ def delete(req: Request):
     sid, u, r = need(req)
     if r:
         return r
-    for t in ("u", "j", "pg"):
+    agent.forget(sid)
+    for t in ("u", "j", "pg", "memberships", "posts"):
         db.q(f"delete from {t} where sid=?", (sid,))
     r = RedirectResponse("/", 303)
     r.delete_cookie("sid")
@@ -507,11 +517,8 @@ def journal(req: Request):
     return page(req, "journal.html", sid, u, entries=entries)
 
 
-@app.post("/journal")
-def journal_add(req: Request, raw: str = Form(..., max_length=500)):
-    sid, u, r = need(req)
-    if r:
-        return r
+def save_journal_entry(sid: str, raw: str) -> str:
+    """Rewrite an entry as a resume line, tag its skills, and save it. Returns the saved line."""
     d, _ = ai.ask(
         f"Rewrite as one resume-ready line using only these facts. Also list up to 5 skills clearly shown in the entry. "
         f'JSON {{"line": str, "skills": [str]}}.\n{ai_data.data(raw)}',
@@ -522,10 +529,20 @@ def journal_add(req: Request, raw: str = Form(..., max_length=500)):
         allow=allow(sid),
     )
     tags = [str(t)[:40] for t in d["skills"][:5]]
+    line = str(d["line"])[:300]
     db.q(
         "insert into j(sid,raw,line,tags) values(?,?,?,?)",
-        (sid, raw, str(d["line"])[:300], json.dumps(tags)),
+        (sid, raw, line, json.dumps(tags)),
     )
+    return line
+
+
+@app.post("/journal")
+def journal_add(req: Request, raw: str = Form(..., max_length=500)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    save_journal_entry(sid, raw)
     return go("/journal", sid)
 
 
@@ -635,7 +652,7 @@ def jobs_match(req: Request, ids: List[int] = Form([])):
             {
                 "id": j["id"],
                 "score": min(95, 40 + 25 * len(low & set(j["tags"]))),
-                "why": "Matched on keywords in your skills.",
+                "why": "Estimated from the skills in your profile.",
             }
             for j in js
         ]
@@ -651,7 +668,7 @@ def jobs_match(req: Request, ids: List[int] = Form([])):
     notice = (
         None
         if src == "ai"
-        else "AI is unavailable right now, so these scores come from keyword matching."
+        else "AI matching is unavailable right now. These are quick estimates from your skills."
     )
     return page(
         req, "jobs.html", sid, u, jobs=js, scores=scores, paste=None, notice=notice
@@ -771,7 +788,83 @@ def community(req: Request):
     sid, u, r = need(req)
     if r:
         return r
-    return page(req, "community.html", sid, u)
+    st = community_mod.samples()["stories"]
+    return page(
+        req,
+        "community.html",
+        sid,
+        u,
+        circles=community_mod.circle_cards(sid, u["stage"]),
+        stories=st,
+        circle_names={k: v[0] for k, v in community_mod.CIRCLES.items()},
+        msg=community_mod.MESSAGES.get(req.query_params.get("msg", "")),
+    )
+
+
+@app.post("/community/join")
+def community_join(req: Request, circle: str = Form(..., max_length=20)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    ok = community_mod.join(sid, circle)
+    return go("/community?msg=joined" if ok else "/community", sid)
+
+
+@app.post("/community/leave")
+def community_leave(req: Request, circle: str = Form(..., max_length=20)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    ok = community_mod.leave(sid, circle)
+    return go("/community?msg=left" if ok else "/community", sid)
+
+
+@app.get("/community/{circle}")
+def community_circle(req: Request, circle: str):
+    sid, u, r = need(req)
+    if r:
+        return r
+    if circle not in community_mod.CIRCLES or circle not in community_mod.joined(sid):
+        return go("/community?msg=join", sid)
+    name, about = community_mod.CIRCLES[circle]
+    return page(
+        req,
+        "community_circle.html",
+        sid,
+        u,
+        slug=circle,
+        circle_name=name,
+        about=about,
+        posts=community_mod.posts(circle, sid),
+        members=community_mod.counts().get(circle, 0),
+        max_post=community_mod.MAX_POST,
+        msg=community_mod.MESSAGES.get(req.query_params.get("msg", "")),
+    )
+
+
+@app.post("/community/{circle}/post")
+def community_post(req: Request, circle: str, body: str = Form("", max_length=1000)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    if circle not in community_mod.CIRCLES or circle not in community_mod.joined(sid):
+        return go("/community?msg=join", sid)
+    why = community_mod.problem_with(body)
+    if not why and limited("post" + sid, 6, 600):
+        why = "toofast"
+    if why:
+        return go(f"/community/{circle}?msg={why}", sid)
+    community_mod.add_post(sid, circle, body)
+    return go(f"/community/{circle}?msg=posted", sid)
+
+
+@app.post("/community/{circle}/post/delete")
+def community_post_delete(req: Request, circle: str, post_id: int = Form(...)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    community_mod.delete_post(sid, post_id)
+    return go(f"/community/{circle}?msg=deleted", sid)
 
 
 def smtp_configured() -> bool:
@@ -943,10 +1036,15 @@ def upskilling_toggle(req: Request, week: int = Form(...), task: int = Form(...)
     return go("/upskilling", sid)
 
 
-def _interview_page(req, sid, u, paste=None, notice=None):
-    me = practice.record(
+VALID_TABS = {"peer", "talk", "ai"}
+
+
+def _interview_page(req, sid, u, paste=None, notice=None, tab=None):
+    rec = practice.record(
         db.q("select practice from u where sid=?", (sid,))[0]["practice"]
     )
+    want, can = practice.flags(rec)
+    reqs = practice.requests(rec)
     return page(
         req,
         "interview.html",
@@ -954,8 +1052,14 @@ def _interview_page(req, sid, u, paste=None, notice=None):
         u,
         paste=paste,
         notice=notice,
-        me=me,
-        pool=practice.pool(sid, me),
+        tab=tab if tab in VALID_TABS else "peer",
+        me=rec,
+        want=want,
+        can=can,
+        pool=practice.pool(sid, rec),
+        pending=reqs,
+        requested={r["key"] for r in reqs},
+        session_types=practice.SESSION_TYPES,
     )
 
 
@@ -964,7 +1068,7 @@ def interview(req: Request):
     sid, u, r = need(req)
     if r:
         return r
-    return _interview_page(req, sid, u)
+    return _interview_page(req, sid, u, tab=req.query_params.get("tab"))
 
 
 @app.post("/interview/paste")
@@ -986,8 +1090,13 @@ def interview_paste(req: Request, jd: str = Form(..., max_length=6000)):
             sid,
             u,
             notice="AI scoring is unavailable right now. Try again in a moment.",
+            tab="talk",
         )
-    return _interview_page(req, sid, u, paste=d)
+    return _interview_page(req, sid, u, paste=d, tab="talk")
+
+
+def _save_practice(sid, rec):
+    db.q("update u set practice=? where sid=?", (json.dumps(rec), sid))
 
 
 @app.post("/interview/practice")
@@ -995,7 +1104,8 @@ def interview_practice(
     req: Request,
     role: str = Form("", max_length=60),
     years: int = Form(0, ge=0, le=40),
-    opt_in: str = Form(""),
+    want_interview: str = Form(""),
+    can_interview: str = Form(""),
 ):
     sid, u, r = need(req)
     if r:
@@ -1003,19 +1113,149 @@ def interview_practice(
     rec = practice.record(
         db.q("select practice from u where sid=?", (sid,))[0]["practice"]
     )
-    rec.update(role=role.strip()[:60], years=years, opt_in=opt_in == "yes")
-    db.q("update u set practice=? where sid=?", (json.dumps(rec), sid))
-    return go("/interview", sid)
+    rec.pop("opt_in", None)  # replaced by the two intents
+    rec.update(
+        role=role.strip()[:60],
+        years=years,
+        want_interview=want_interview == "yes",
+        can_interview=can_interview == "yes",
+    )
+    _save_practice(sid, rec)
+    return go("/interview?tab=peer", sid)
 
 
 @app.post("/interview/request")
-def interview_request(req: Request, partner: str = Form(..., max_length=120)):
+def interview_request(
+    req: Request,
+    partner: str = Form(..., max_length=120),
+    session: str = Form("swap", max_length=20),
+):
     sid, u, r = need(req)
     if r:
         return r
     rec = practice.record(
         db.q("select practice from u where sid=?", (sid,))[0]["practice"]
     )
-    rec["requests"] = (rec.get("requests", []) + [partner.strip()[:120]])[-10:]
-    db.q("update u set practice=? where sid=?", (json.dumps(rec), sid))
-    return go("/interview", sid)
+    shown = {p["key"] for p in practice.pool(sid, rec)}
+    existing = practice.requests(rec)
+    # Only people in the pool can be requested, and each person only once.
+    if partner in shown and partner not in {x["key"] for x in existing}:
+        kind = session if session in practice.SESSION_TYPES else "swap"
+        rec["requests"] = (
+            [{"key": x["key"], "type": x["type"]} for x in existing]
+            + [{"key": partner, "type": kind}]
+        )[-10:]
+        _save_practice(sid, rec)
+    return go("/interview?tab=peer", sid)
+
+
+@app.post("/interview/request/remove")
+def interview_request_remove(req: Request, partner: str = Form(..., max_length=120)):
+    sid, u, r = need(req)
+    if r:
+        return r
+    rec = practice.record(
+        db.q("select practice from u where sid=?", (sid,))[0]["practice"]
+    )
+    rec["requests"] = [
+        {"key": x["key"], "type": x["type"]}
+        for x in practice.requests(rec)
+        if x["key"] != partner
+    ]
+    _save_practice(sid, rec)
+    return go("/interview?tab=peer", sid)
+
+
+# ---- Comeback Buddy (tool-calling chat) ------------------------------------------------------
+
+
+class AskIn(BaseModel):
+    message: str = Field(min_length=1, max_length=600)
+
+
+class PendingIn(BaseModel):
+    id: str = Field(min_length=1, max_length=64)
+
+
+def _ask_tools(u):
+    """What the agent may read. Each tool only sees the signed-in user's own data."""
+
+    def get_profile():
+        prof = u["prof"]
+        if not prof:
+            return {"profile": None}
+        return {
+            "summary": prof.get("summary", ""),
+            "break_statement": prof.get("brk", ""),
+            "skills": prof.get("skills", []),
+            "goal": u["goal"],
+            "stage": u["stage"],
+        }
+
+    def list_jobs():
+        keys = (
+            "id",
+            "title",
+            "company",
+            "location",
+            "returner_friendly",
+            "tags",
+            "summary",
+        )
+        return {"sample_jobs": [{k: j[k] for k in keys} for j in job_pool()]}
+
+    def get_study_plan():
+        raw = db.q("select plan from u where sid=?", (u["sid"],))[0]["plan"]
+        return json.loads(raw) if raw else {"plan": None}
+
+    return {
+        "get_profile": get_profile,
+        "list_jobs": list_jobs,
+        "get_study_plan": get_study_plan,
+    }
+
+
+def _json_user(req):
+    sid, u = current(req)
+    return (sid, u) if u else (None, None)
+
+
+@app.get("/ask")
+def ask_page(req: Request):
+    sid, u, r = need(req)
+    if r:
+        return r
+    return page(req, "ask.html", sid, u)
+
+
+@app.post("/ask/send")
+def ask_send(req: Request, body: AskIn):
+    sid, u = _json_user(req)
+    if not u:
+        return JSONResponse({"error": "login"}, status_code=401)
+    if not os.getenv("ANTHROPIC_API_KEY") or not allow(sid):
+        return JSONResponse({"reply": agent.UNAVAILABLE, "steps": [], "pending": None})
+    try:
+        return JSONResponse(agent.run(sid, body.message, _ask_tools(u)))
+    except Exception as e:  # timeouts, API errors: a plain message, never a stack trace
+        print("Agent error:", type(e).__name__)
+        return JSONResponse({"reply": agent.UNAVAILABLE, "steps": [], "pending": None})
+
+
+@app.post("/ask/confirm")
+def ask_confirm(req: Request, body: PendingIn):
+    sid, u = _json_user(req)
+    if not u:
+        return JSONResponse({"error": "login"}, status_code=401)
+    text = agent.confirm(sid, body.id)
+    if not text:
+        return JSONResponse({"ok": False, "error": "That confirmation has expired."})
+    return JSONResponse({"ok": True, "line": save_journal_entry(sid, text)})
+
+
+@app.post("/ask/cancel")
+def ask_cancel(req: Request, body: PendingIn):
+    sid, u = _json_user(req)
+    if not u:
+        return JSONResponse({"error": "login"}, status_code=401)
+    return JSONResponse({"ok": agent.cancel(sid, body.id)})
