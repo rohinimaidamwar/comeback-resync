@@ -458,6 +458,8 @@ def stage(req: Request, stage: str = Form(...), goal: str = Form(..., max_length
 @app.post("/demo")
 def demo(req: Request):
     sid, u = current(req)
+    if u and not u["email"].endswith("@demo.invalid"):
+        return go("/")  # never overwrite a real member's journal and profile
     if not u:
         # Anyone can start the demo without registering. The account gets a random email
         # and an unusable password hash, so nobody can log in to it directly.
@@ -496,6 +498,14 @@ def demo(req: Request):
     ]:
         db.q("insert into j(sid,raw,line) values(?,?,?)", (sid, line, line))
     return go("/", sid)
+
+
+@app.get("/delete")
+def delete_confirm(req: Request):
+    sid, u, r = need(req)
+    if r:
+        return r
+    return page(req, "delete.html", sid, u)
 
 
 @app.post("/delete")
@@ -1027,7 +1037,7 @@ def upskilling_plan(req: Request):
         upskill.prompt(u["goal"], STAGES.get(u["stage"], u["stage"]), sk),
         fb,
         schema=StudyPlan,
-        max_tokens=900,
+        max_tokens=2500,
         allow=allow(sid),
     )
     plan = upskill.clean(d)

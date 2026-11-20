@@ -64,6 +64,7 @@ img{max-width:100%;height:auto}
 }
 
 /* Phone: bottom bar, single column */
+@media (max-width:420px){.bottom-nav a{font-size:9px}.bottom-nav{padding:6px 0}}
 @media (max-width:760px){
  .side{display:none}
  .content>header.top{padding:12px 16px 0}
@@ -134,7 +135,7 @@ img{max-width:100%;height:auto}
 .todo-row button{flex:0 0 auto;padding:6px 12px}
 
 /* Interview prep */
-:root{--terra:#B06A4A;--sage:#A7B49A;--sage-ink:#3F5A4B}
+:root{--terra:#9C5A3C;--sage:#A7B49A;--sage-ink:#3F5A4B}
 [hidden]{display:none!important}
 button.terra{background:var(--terra)}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin:14px 0 18px}

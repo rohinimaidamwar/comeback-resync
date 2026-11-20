@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% block title %}Delete my data · hercomeback{% endblock %}{% block c %}
+<h1>Delete my data?</h1>
+<p>This permanently removes your account, journal entries, profile, study plan, community posts and published pages. It cannot be undone.</p>
+<form method="post" action="/delete" class="box">
+<button class="terra">Yes, delete everything</button> <a href="/">Cancel</a>
+</form>
+{% endblock %}

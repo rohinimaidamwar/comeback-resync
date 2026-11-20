@@ -5,13 +5,13 @@
 <h1>A career break is a chapter, not a gap.</h1>
 </section>
 <p class="lead">Plan it, record it, and walk back in with a profile and a plan that show what you did.</p>
-<div class="box">
-<p>A career break can happen for many reasons: caring for family, your children's education, health, moving or study. Create an account to keep your journal, profile and plan. You can log out without losing that data.</p>
-<p><a href="/register">Register</a> · <a href="/login">Log in</a></p>
-</div>
 <div class="grid">
 <form method="post" action="/demo" class="box"><h3>See a demo</h3><p class="note">Meet Priya, six months pregnant and a product manager. No sign-up needed.</p><button>Try the demo</button></form>
 <div class="box"><h3>Get started</h3><p class="note">Register and start your break journal.</p><a class="btn-outline" href="/register">Create my account</a></div>
+</div>
+<div class="box">
+<p>A career break can happen for many reasons: caring for family, your children's education, health, moving or study. Create an account to keep your journal, profile and plan. You can log out without losing that data.</p>
+<p><a href="/register">Register</a> · <a href="/login">Log in</a></p>
 </div>
 <div class="box ai-box">
 <h3>{{ ai() }} How hercomeback uses AI</h3>
@@ -33,6 +33,6 @@
 <form method="post" action="/stage" class="box stage-row"><label>Where are you now?<select name="stage">{% for k,v in stages.items() %}<option value="{{k}}" {{'selected' if u.stage==k}}>{{v}}</option>{% endfor %}</select></label>
 <label>What do you want next?<select name="goal">{% for g in ["A job","Freelance work","My own venture"] %}<option {{'selected' if u.goal==g}}>{{g}}</option>{% endfor %}</select></label><button>Save</button></form>
 {% include "_roadmap.html" %}
-<form method="post" action="/demo"><button class="ghost">Load demo persona</button></form>
+{% if u.email.endswith('@demo.invalid') %}<form method="post" action="/demo"><button class="ghost">Reset demo persona</button></form>{% endif %}
 {% endif %}
 {% endblock %}

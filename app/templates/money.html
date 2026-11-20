@@ -1,2 +1,2 @@
-{% extends "base.html" %}{% block c %}<h1>Money basics</h1><p>General information only. Check each source before you act.</p>
+{% extends "base.html" %}{% block title %}Money basics · hercomeback{% endblock %}{% block c %}<h1>Money basics</h1><p>General information only. Check each source before you act.</p>
 {% for c in cards %}<div class="box"><h3>{{c.title}}</h3><p>{{c.answer}}</p><p class="note">{% if c.verified %}Checked against the official source.{% else %}Not checked yet.{% endif %} <a href="{{c.source_url}}" rel="noopener">Official source</a></p></div>{% endfor %}{% endblock %}

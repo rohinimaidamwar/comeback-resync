@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% block c %}{% from "_ai.html" import ai %}<h1>Jobs</h1>
+{% extends "base.html" %}{% block title %}Jobs · hercomeback{% endblock %}{% block c %}{% from "_ai.html" import ai %}<h1>Jobs</h1>
 <form method="post" action="/jobs/match">{% for j in jobs %}<input type="hidden" name="ids" value="{{j.id}}">{% endfor %}<button>Match these to my profile</button></form>
 <p class="note">These are sample postings for practice. The companies are fictional and none is a real opening. A new set appears each visit.</p>
 {% if notice %}<p class="note">{{notice}}</p>{% endif %}
